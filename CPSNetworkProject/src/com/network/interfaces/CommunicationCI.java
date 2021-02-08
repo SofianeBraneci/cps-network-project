@@ -1,6 +1,9 @@
 package com.network.interfaces;
 
-public interface CommunicationCI {
+import fr.sorbonne_u.components.interfaces.OfferedCI;
+import fr.sorbonne_u.components.interfaces.RequiredCI;
+
+public interface  CommunicationCI extends  OfferedCI, RequiredCI {
 	
 	void connect(NodeAddressI address, String communicationInboudURI) throws Exception;
 	void connectRouting (NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) throws Exception;
