@@ -1,7 +1,7 @@
 package com.network.tests;
 
 
-import com.network.components.registrator.RegisterComponent;
+import com.network.components.register.RegisterComponent;
 import com.network.components.terminalnode.TerminalNodeComponent;
 import com.network.connectors.RegisterTerminalNodeConnector;
 

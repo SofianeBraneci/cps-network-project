@@ -1,4 +1,4 @@
-package com.network.components.registrator;
+package com.network.components.register;
 
 import java.util.HashSet;
 import java.util.Map;

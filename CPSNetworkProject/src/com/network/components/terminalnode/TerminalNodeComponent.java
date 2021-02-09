@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.network.common.NodeAddress;
 import com.network.common.Position;
-import com.network.components.registrator.RegisterComponent;
+import com.network.components.register.RegisterComponent;
 import com.network.interfaces.ConnectionInfo;
 import com.network.interfaces.NodeAddressI;
 import com.network.interfaces.PositionI;
