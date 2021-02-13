@@ -3,7 +3,7 @@ package com.network.common;
 import com.network.interfaces.NodeAddressI;
 import com.network.interfaces.PositionI;
 
-public class ConnectionInfo implements com.network.interfaces.ConnectionInfo {
+public class ConnectionInfo {
 	
 	private NodeAddressI address;
 	private String communicationInboundPortURI, routingInboundPortURI;
@@ -20,35 +20,27 @@ public class ConnectionInfo implements com.network.interfaces.ConnectionInfo {
 		this.isRoutning = isRoutning;
 	}
 
-	@Override
+	
 	public NodeAddressI getAddress() {
 		// TODO Auto-generated method stub
 		return address;
 	}
 
-	@Override
 	public String getCommunicationInboudPort() {
 		// TODO Auto-generated method stub
 		return communicationInboundPortURI;
 	}
 
-	@Override
 	public boolean isRouting() {
 		// TODO Auto-generated method stub
 		return isRoutning;
 	}
 
-	@Override
 	public String getRoutingInboundPortURI() {
 		// TODO Auto-generated method stub
 		return routingInboundPortURI;
 	}
 
-	@Override
-	public PositionI getPosition() {
-		// TODO Auto-generated method stub
-		return position;
-	}
-
+	
 	
 }

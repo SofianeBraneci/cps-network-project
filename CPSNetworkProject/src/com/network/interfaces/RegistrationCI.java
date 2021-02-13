@@ -2,9 +2,12 @@ package com.network.interfaces;
 
 import java.util.Set;
 
-import fr.sorbonne_u.components.interfaces.OfferedCI;
+import com.network.common.ConnectionInfo;
 
-public interface RegistrationCI extends OfferedCI{
+import fr.sorbonne_u.components.interfaces.OfferedCI;
+import fr.sorbonne_u.components.interfaces.RequiredCI;
+
+public interface RegistrationCI extends OfferedCI, RequiredCI{
 	
 	Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, 
 			String communicationInboundPortURI, 

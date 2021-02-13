@@ -2,7 +2,7 @@ package com.network.components.register;
 
 import java.util.Set;
 
-import com.network.interfaces.ConnectionInfo;
+import com.network.common.ConnectionInfo;
 import com.network.interfaces.NodeAddressI;
 import com.network.interfaces.PositionI;
 import com.network.interfaces.RegistrationCI;
