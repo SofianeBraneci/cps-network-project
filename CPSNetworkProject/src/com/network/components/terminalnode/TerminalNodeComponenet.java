@@ -18,13 +18,13 @@ import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
-
+ 
 @RequiredInterfaces(required = { RegistrationCI.class, CommunicationCI.class })
 @OfferedInterfaces(offered = { CommunicationCI.class })
 public class TerminalNodeComponenet extends AbstractComponent {
-	public static String TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI = "TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI";
-	public static String TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI = "TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI";
-	public static String TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI = "TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI";
+	public static final String TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI = "TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI";
+	public static final String TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI = "TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI";
+	public static final String TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI = "TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI";
 
 	protected TerminalNodeRegistrationOutboundPort terminalNodeRegistrationOutboundPort;
 	protected TerminalNodeCommunicationInboundPort terminalNodeCommunicationInboundPort;
@@ -53,7 +53,8 @@ public class TerminalNodeComponenet extends AbstractComponent {
 			this.terminalNodeCommunicationOutboundPort.publishPort();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
 		this.toggleLogging();
 		this.toggleTracing();

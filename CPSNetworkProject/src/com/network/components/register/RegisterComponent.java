@@ -20,8 +20,10 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 @OfferedInterfaces(offered = { RegistrationCI.class })
 public class RegisterComponent extends AbstractComponent {
 
-	protected RegisterServiceInboundPort registerPort;
-	public static final String REGISTER_INBOUND_PORT_URI = "register-port-uri";
+	protected RegisterServiceInboundPort registerPort1, registerPort2;
+	public static final String REGISTER_INBOUND_PORT_URI1 = "REGISTER_INBOUND_PORT_URI1";
+	public static final String REGISTER_INBOUND_PORT_URI2 = "REGISTER_INBOUND_PORT_URI12";
+
 	// terminal nodes
 	private Map<NodeAddressI, NodeComponentInformationWrapper> terminalNodesTable;
 	// routing nodes
@@ -32,8 +34,10 @@ public class RegisterComponent extends AbstractComponent {
 	protected RegisterComponent() {
 		super(10, 0);
 		try {
-			registerPort = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI, this);
-			registerPort.publishPort();
+			registerPort1 = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI1, this);
+			registerPort1.publishPort();
+			registerPort2 = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI2, this);
+			registerPort2.publishPort();
 			terminalNodesTable = new HashMap<>();
 			routinNodesTable = new HashMap<>();
 			accessPointsNodesTable = new HashMap<>();
@@ -84,7 +88,8 @@ public class RegisterComponent extends AbstractComponent {
 	public synchronized void shutdown() throws ComponentShutdownException {
 		// TODO Auto-generated method stub
 		try {
-			registerPort.unpublishPort();
+			registerPort1.unpublishPort();
+			//registerPort2.unpublishPort();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			throw new ComponentShutdownException(e);
@@ -96,16 +101,27 @@ public class RegisterComponent extends AbstractComponent {
 		super.execute();
 		terminalNodesTable.put(new NodeAddress("IP Address"),
 				new NodeComponentInformationWrapper("sd", new Position(12, 3)));
+		accessPointsNodesTable.put(new NodeAddress("IP"), new NodeComponentInformationWrapper("", new Position(12,12),"fdfd"));
+		routinNodesTable.put(new NodeAddress("IPP"), new NodeComponentInformationWrapper("", new Position(12,10),"fff"));
+
 		System.err.println("Excuted\n");
+		
 	}
 
+	@Override
+	public synchronized void finalise() throws Exception {
+		// TODO Auto-generated method stub
+		doPortDisconnection(REGISTER_INBOUND_PORT_URI1);
+	}
 	Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) {
 		
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 0);
 		terminalNodesTable.put(address,
 				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
-		System.err.println("current table size " + terminalNodesTable.size());
+		System.err.println("current terminal nodes table size " + terminalNodesTable.size());
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		return neighbores;
 	}
 
@@ -114,7 +130,9 @@ public class RegisterComponent extends AbstractComponent {
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 2);
 		accessPointsNodesTable.put(address,
 				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition, routingInboundPortURI));
-		System.err.println("current table size " + accessPointsNodesTable.size());
+		System.err.println("current access points  table size " + accessPointsNodesTable.size());
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 0));
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		return neighbores;
 	}
 
@@ -123,7 +141,9 @@ public class RegisterComponent extends AbstractComponent {
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 2);
 		routinNodesTable.put(address,
 				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition, routingInboundPortURI));
-		System.err.println("current table size " + routinNodesTable.size());
+		System.err.println("current routing table size " + routinNodesTable.size());
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 0));
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		return neighbores;
 	}
 
