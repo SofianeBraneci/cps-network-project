@@ -7,7 +7,7 @@ import com.network.interfaces.NodeAddressI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 
-public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort implements CommunicationCI{
+public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort implements CommunicationCI {
 	/**
 	 * 
 	 */
@@ -18,41 +18,47 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 		assert owner instanceof TerminalNodeComponenet;
 	}
 
-
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
-		getOwner().handleRequest(c->{
-			((CommunicationCI)c).connect(address, communicationInboudURI);
+		getOwner().handleRequest(c -> {
+			((CommunicationCI) c).connect(address, communicationInboudURI);
 			return null;
 		});
-		
+
 	}
 
 	@Override
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
-		// TODO Auto-generated method stub
-		
+
+		getOwner().handleRequest(c -> {
+			((CommunicationCI) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
+			return null;
+		});
+
 	}
 
 	@Override
 	public void transmitMessag(MessageI m) throws Exception {
-		// TODO Auto-generated method stub
-		
+		getOwner().handleRequest(c -> {
+			((CommunicationCI) c).transmitMessag(m);
+			return null;
+		});
+
 	}
 
 	@Override
 	public boolean hasRouteFor(NodeAddressI address) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+		return getOwner().handleRequest(c -> ((CommunicationCI) c).hasRouteFor(address));
 	}
 
 	@Override
 	public void ping() throws Exception {
-		// TODO Auto-generated method stub
-		
+		getOwner().handleRequest(c -> {
+			((CommunicationCI) c).ping();
+			return null;
+		});
+
 	}
-
-
 
 }

@@ -5,7 +5,6 @@ import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
 
 import fr.sorbonne_u.components.ComponentI;
-import fr.sorbonne_u.components.interfaces.RequiredCI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 
 public class TerminalNodeCommunicationOutboundPort extends AbstractOutboundPort implements CommunicationCI {
@@ -18,7 +17,6 @@ public class TerminalNodeCommunicationOutboundPort extends AbstractOutboundPort 
 
 	public TerminalNodeCommunicationOutboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, CommunicationCI.class, owner);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -30,26 +28,22 @@ public class TerminalNodeCommunicationOutboundPort extends AbstractOutboundPort 
 	@Override
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
-		// TODO Auto-generated method stub
-		
+			((CommunicationCI) getConnector()).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 	}
 
 	@Override
 	public void transmitMessag(MessageI m) throws Exception {
-		// TODO Auto-generated method stub
-		
+		((CommunicationCI)getConnector()).transmitMessag(m);
 	}
 
 	@Override
 	public boolean hasRouteFor(NodeAddressI address) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+		return ((CommunicationCI)getConnector()).hasRouteFor(address);
 	}
 
 	@Override
 	public void ping() throws Exception {
-		// TODO Auto-generated method stub
-		
+		((CommunicationCI)getConnector()).ping();
 	}
 
 }

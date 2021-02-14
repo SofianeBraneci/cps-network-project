@@ -18,13 +18,22 @@ public class NodeComponentInformationWrapper {
 		this.routingInboundPortURI = routingInboundPortURI;
 	}
 
+	public NodeComponentInformationWrapper(String communicationInboundPortURI) {
+		super();
+		this.communicationInboundPortURI = communicationInboundPortURI;
+	}
 
-	public NodeComponentInformationWrapper(String communicationInboundPortURI,
-			PositionI initialPosition) {
+	public NodeComponentInformationWrapper(String communicationInboundPortURI,PositionI initialPosition) {
 		super();
 		this.communicationInboundPortURI = communicationInboundPortURI;
 		this.initialPosition = initialPosition;
 		this.routingInboundPortURI = null;
+	}
+	
+	public NodeComponentInformationWrapper(String communicationInboundPortURI, String routingInboundPortURI){
+		super();
+		this.communicationInboundPortURI = communicationInboundPortURI;
+		this.routingInboundPortURI = routingInboundPortURI;
 	}
 	
 	public PositionI getInitialPosition() {

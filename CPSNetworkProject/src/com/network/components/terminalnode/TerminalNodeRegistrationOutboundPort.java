@@ -30,13 +30,13 @@ public class TerminalNodeRegistrationOutboundPort extends AbstractOutboundPort i
 	@Override
 	public Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
-		return null;
+		return ((RegistrationCI)getConnector()).registerAccessPoint(address, communicationInboundPortURI, initialPosition, initialRange, routingInboundPortURI);
 	}
 
 	@Override
 	public Set<ConnectionInfo> registerRoutigNode(NodeAddressI address, String commnicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
-		return null;
+		return ((RegistrationCI)getConnector()).registerRoutigNode(address, commnicationInboundPortURI, initialPosition, initialRange, routingInboundPortURI);
 	}
 
 	@Override

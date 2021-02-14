@@ -26,9 +26,16 @@ public class CVM extends AbstractCVM{
 		
 		AbstractComponent.createComponent(RegisterComponent.class.getCanonicalName(), new Object[]{});
 		String terminalNodeURI = AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {});
+		String terminalNodeURI2 = AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {});
+
 		doPortConnection(terminalNodeURI, 
 				TerminalNodeComponenet.TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI, 
-				RegisterComponent.REGISTER_INBOUND_PORT_URI, TerminalNodeRegistrationConnector.class.getCanonicalName());
+				RegisterComponent.REGISTER_INBOUND_PORT_URI, 
+				TerminalNodeRegistrationConnector.class.getCanonicalName());
+		
+//		doPortConnection(terminalNodeURIString, TerminalNodeComponenet.TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI, 
+//				RegisterComponent.REGISTER_INBOUND_PORT_URI, 
+//				TerminalNodeRegistrationConnector.class.getCanonicalName());
 		super.deploy();
 	}
 
