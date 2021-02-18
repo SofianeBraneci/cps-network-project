@@ -7,6 +7,7 @@ import com.network.components.routingnode.RoutingNodeComponent;
 import com.network.components.terminalnode.TerminalNodeComponenet;
 import com.network.connectors.AccessPointRegistrationConnector;
 import com.network.connectors.RoutinNodeRegistrationConnector;
+import com.network.connectors.TerminalNodeAccessPointCommunicationConnector;
 import com.network.connectors.TerminalNodeRegistrationConnector;
 
 import fr.sorbonne_u.components.AbstractComponent;
@@ -33,7 +34,16 @@ public class CVM extends AbstractCVM{
 		doPortConnection(routingUri, AccessPointComponent.ACCESS_POINT_REGISTRATION_OUTBOUND_PORT_URI, 
 				RegisterComponent.REGISTER_INBOUND_PORT_URI1,
 				AccessPointRegistrationConnector.class.getCanonicalName());
-		//String terminalNodeURI = AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {});
+		String terminalNodeURI = AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {});
+		doPortConnection(terminalNodeURI, TerminalNodeComponenet.TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI, 
+				RegisterComponent.REGISTER_INBOUND_PORT_URI2,
+				TerminalNodeRegistrationConnector.class.getCanonicalName());
+		String routigURI = AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(), new Object[] {});
+		doPortConnection(routigURI, RoutingNodeComponent.ROUTING_NODE_REGISTRATION_OUTBOUN_PORT_URI, RegisterComponent.REGISTER_INBOUND_PORT_URI3, 
+				RoutinNodeRegistrationConnector.class.getCanonicalName());;
+//		doPortConnection(terminalNodeURI, TerminalNodeComponenet.TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI, 
+//				AccessPointComponent.ACCESS_POINT_COMMUNICATION_INBOUND_PORT_URI,
+//				TerminalNodeAccessPointCommunicationConnector.class.getCanonicalName());
 		//String terminalNodeURI2 = AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {});
 
 //		doPortConnection(terminalNodeURI, 

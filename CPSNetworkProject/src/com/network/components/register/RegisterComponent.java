@@ -20,9 +20,11 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 @OfferedInterfaces(offered = { RegistrationCI.class })
 public class RegisterComponent extends AbstractComponent {
 
-	protected RegisterServiceInboundPort registerPort1, registerPort2;
+	protected RegisterServiceInboundPort registerPort1, registerPort2, registerPort3;
 	public static final String REGISTER_INBOUND_PORT_URI1 = "REGISTER_INBOUND_PORT_URI1";
 	public static final String REGISTER_INBOUND_PORT_URI2 = "REGISTER_INBOUND_PORT_URI12";
+	public static final String REGISTER_INBOUND_PORT_URI3 = "REGISTER_INBOUND_PORT_URI13";
+
 
 	// terminal nodes
 	private Map<NodeAddressI, NodeComponentInformationWrapper> terminalNodesTable;
@@ -38,6 +40,8 @@ public class RegisterComponent extends AbstractComponent {
 			registerPort1.publishPort();
 			registerPort2 = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI2, this);
 			registerPort2.publishPort();
+			registerPort3 = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI3, this);
+			registerPort3.publishPort();
 			terminalNodesTable = new HashMap<>();
 			routinNodesTable = new HashMap<>();
 			accessPointsNodesTable = new HashMap<>();
@@ -49,7 +53,7 @@ public class RegisterComponent extends AbstractComponent {
 	}
 
 	Set<ConnectionInfo> getNeighboors(NodeAddressI address, PositionI initialPosition, double initialRange, int table) {
-		
+
 		Set<ConnectionInfo> connectionInfos = new HashSet<>();
 
 		switch (table) {
@@ -89,7 +93,8 @@ public class RegisterComponent extends AbstractComponent {
 		// TODO Auto-generated method stub
 		try {
 			registerPort1.unpublishPort();
-			//registerPort2.unpublishPort();
+			registerPort2.unpublishPort();
+			registerPort3.unpublishPort();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			throw new ComponentShutdownException(e);
@@ -99,23 +104,20 @@ public class RegisterComponent extends AbstractComponent {
 	@Override
 	public synchronized void execute() throws Exception {
 		super.execute();
-		terminalNodesTable.put(new NodeAddress("IP Address"),
-				new NodeComponentInformationWrapper("sd", new Position(12, 3)));
-		accessPointsNodesTable.put(new NodeAddress("IP"), new NodeComponentInformationWrapper("", new Position(12,12),"fdfd"));
-		routinNodesTable.put(new NodeAddress("IPP"), new NodeComponentInformationWrapper("", new Position(12,10),"fff"));
+//		terminalNodesTable.put(new NodeAddress("IP Address"),
+//				new NodeComponentInformationWrapper("sd", new Position(12, 3)));
+//		accessPointsNodesTable.put(new NodeAddress("IP"),
+//				new NodeComponentInformationWrapper("ddd", new Position(12, 12), "fdfd"));
+		routinNodesTable.put(new NodeAddress("IPP"),
+				new NodeComponentInformationWrapper("dddddd", new Position(12, 10), "fff"));
 
 		System.err.println("Excuted\n");
-		
+
 	}
 
-	@Override
-	public synchronized void finalise() throws Exception {
-		// TODO Auto-generated method stub
-		doPortDisconnection(REGISTER_INBOUND_PORT_URI1);
-	}
 	Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) {
-		
+
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 0);
 		terminalNodesTable.put(address,
 				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
@@ -128,8 +130,8 @@ public class RegisterComponent extends AbstractComponent {
 	Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 2);
-		accessPointsNodesTable.put(address,
-				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition, routingInboundPortURI));
+		accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
+				initialPosition, routingInboundPortURI));
 		System.err.println("current access points  table size " + accessPointsNodesTable.size());
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 0));
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
@@ -139,8 +141,8 @@ public class RegisterComponent extends AbstractComponent {
 	Set<ConnectionInfo> registerRoutigNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 2);
-		routinNodesTable.put(address,
-				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition, routingInboundPortURI));
+		routinNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition,
+				routingInboundPortURI));
 		System.err.println("current routing table size " + routinNodesTable.size());
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 0));
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
@@ -151,8 +153,8 @@ public class RegisterComponent extends AbstractComponent {
 		terminalNodesTable.remove(address);
 		routinNodesTable.remove(address);
 		accessPointsNodesTable.remove(address);
-		System.err.println("Table size "+  terminalNodesTable.size());
+		System.err.println("Table size " + terminalNodesTable.size());
 		logMessage("A node was unregistered");
-		
+
 	}
 }

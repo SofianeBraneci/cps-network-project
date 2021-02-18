@@ -22,7 +22,7 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).connect(address, communicationInboudURI);
+			((RoutingNodeComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
 
@@ -33,7 +33,7 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 			throws Exception {
 
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
+			((RoutingNodeComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
 
@@ -42,7 +42,7 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 	@Override
 	public void transmitMessag(MessageI m) throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).transmitMessag(m);
+			((RoutingNodeComponent) c).transmitMessag(m);
 			return null;
 		});
 
@@ -50,13 +50,13 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 
 	@Override
 	public boolean hasRouteFor(NodeAddressI address) throws Exception {
-		return getOwner().handleRequest(c -> ((CommunicationCI) c).hasRouteFor(address));
+		return getOwner().handleRequest(c -> ((RoutingNodeComponent) c).hasRouteFor(address));
 	}
 
 	@Override
 	public void ping() throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).ping();
+			((RoutingNodeComponent) c).ping();
 			return null;
 		});
 

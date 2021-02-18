@@ -8,6 +8,8 @@ import com.network.common.ConnectionInfo;
 import com.network.common.NodeAddress;
 import com.network.common.NodeComponentInformationWrapper;
 import com.network.common.Position;
+import com.network.components.accesspointnode.AccessPointComponent;
+import com.network.connectors.TerminalNodeAccessPointCommunicationConnector;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -18,7 +20,7 @@ import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
- 
+
 @RequiredInterfaces(required = { RegistrationCI.class, CommunicationCI.class })
 @OfferedInterfaces(offered = { CommunicationCI.class })
 public class TerminalNodeComponenet extends AbstractComponent {
@@ -31,14 +33,13 @@ public class TerminalNodeComponenet extends AbstractComponent {
 	protected TerminalNodeCommunicationOutboundPort terminalNodeCommunicationOutboundPort;
 	private NodeAddressI address;
 	private PositionI initialPosition;
-	private String communicationInboundPortURI;
 	private double initialRange;
 	private Map<NodeAddressI, NodeComponentInformationWrapper> connections;
+
 	protected TerminalNodeComponenet() {
 		super(10, 0);
 		this.address = new NodeAddress("Some IP");
 		this.initialPosition = new Position(1, 2);
-		this.communicationInboundPortURI = "";
 		this.initialRange = 200;
 		this.connections = new HashMap<>();
 		try {
@@ -53,7 +54,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 			this.terminalNodeCommunicationOutboundPort.publishPort();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			//e.printStackTrace();
+			// e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 		this.toggleLogging();
@@ -62,47 +63,55 @@ public class TerminalNodeComponenet extends AbstractComponent {
 
 	void connect(NodeAddressI address, String communicationInboudURI) {
 		connections.put(address, new NodeComponentInformationWrapper(communicationInboudURI));
-		logMessage("Connected");
-		
+		logMessage("Terminal Node Connected");
+
 	}
-	void connectRouting (NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
+
+	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
 		connections.put(address, new NodeComponentInformationWrapper(communicationInboudPortURI, routingInboudPortURI));
 	}
+
 	void transmitMessag(MessageI m) {
-		// Check if it has a route to message's address and send it via that port, else kill it 
-		
+		// Check if it has a route to message's address and send it via that port, else
+		// kill it
+
 	}
+
 	boolean hasRouteFor(NodeAddressI address) {
 		return connections.containsKey(address);
 	}
+
 	void ping() {
-		
+
 	}
-	
+
 	@Override
 	public synchronized void execute() throws Exception {
 		// TODO Auto-generated method stub
 		System.out.println("ssdfsdfsdfdsfsd");
 		Set<ConnectionInfo> connectionInfos = terminalNodeRegistrationOutboundPort.registerTerminalNode(address,
-				communicationInboundPortURI, initialPosition, initialRange);
+				TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI, initialPosition, initialRange);
 		this.logMessage("connection size = " + connectionInfos.size());
-		try {
-			Thread.sleep(2000);
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-		this.terminalNodeRegistrationOutboundPort.unregister(address);
-		logMessage("I unregistered my self");
+		doPortConnection(TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI,
+				AccessPointComponent.ACCESS_POINT_COMMUNICATION_INBOUND_PORT_URI,
+				TerminalNodeAccessPointCommunicationConnector.class.getCanonicalName());
+//		for (ConnectionInfo cInfo : connectionInfos) {
+//			System.err.println(cInfo.getCommunicationInboudPort());
+//		}
+		terminalNodeCommunicationOutboundPort.connect(address, TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI);
+
+		// this.terminalNodeRegistrationOutboundPort.unregister(address);
+		// logMessage("I unregistered my self");
 		super.execute();
-		
+
 	}
 
 	@Override
 	public synchronized void finalise() throws Exception {
 		// TODO Auto-generated method stub
 		doPortDisconnection(TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI);
-		//doPortDisconnection(TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI);
-		//doPortDisconnection(TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI);
+		// doPortDisconnection(TERMINAL_NODE_CONNECTION_INBOUND_PORT_URI);
+		doPortDisconnection(TERMINAL_NODE_CONNECTION_OUTBOUND_PORT_URI);
 		super.finalise();
 	}
 

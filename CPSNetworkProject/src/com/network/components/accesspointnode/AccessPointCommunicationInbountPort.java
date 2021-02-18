@@ -22,7 +22,8 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).connect(address, communicationInboudURI);
+			System.err.println("Idfdsfsdt");
+			((AccessPointComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
 
@@ -33,7 +34,7 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 			throws Exception {
 
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
+			((AccessPointComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
 
@@ -42,7 +43,7 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 	@Override
 	public void transmitMessag(MessageI m) throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).transmitMessag(m);
+			((AccessPointComponent) c).transmitMessag(m);
 			return null;
 		});
 

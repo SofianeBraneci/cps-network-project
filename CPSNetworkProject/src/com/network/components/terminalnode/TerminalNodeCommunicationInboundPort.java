@@ -21,7 +21,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).connect(address, communicationInboudURI);
+			((TerminalNodeComponenet) c).connect(address, communicationInboudURI);
 			return null;
 		});
 
@@ -32,7 +32,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 			throws Exception {
 
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
+			((TerminalNodeComponenet) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
 
@@ -41,7 +41,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	@Override
 	public void transmitMessag(MessageI m) throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).transmitMessag(m);
+			((TerminalNodeComponenet) c).transmitMessag(m);
 			return null;
 		});
 
@@ -49,7 +49,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 
 	@Override
 	public boolean hasRouteFor(NodeAddressI address) throws Exception {
-		return getOwner().handleRequest(c -> ((CommunicationCI) c).hasRouteFor(address));
+		return getOwner().handleRequest(c -> ((TerminalNodeComponenet) c).hasRouteFor(address));
 	}
 
 	@Override

@@ -23,7 +23,7 @@ public class AccessPointRoutingInboundPort extends AbstractInboundPort implement
 	@Override
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) throws Exception {
 		getOwner().handleRequest(c->{
-			((RoutingCI)c).updateRouting(address, routes);
+			((AccessPointComponent)c).updateRouting(address, routes);
 			return null;
 		});
 		
@@ -32,7 +32,7 @@ public class AccessPointRoutingInboundPort extends AbstractInboundPort implement
 	@Override
 	public void updateAccessPoint(NodeAddressI neighbour, int numberOfHops) throws Exception {
 		getOwner().handleRequest(c->{
-			((RoutingCI)c).updateAccessPoint(neighbour, numberOfHops);
+			((AccessPointComponent)c).updateAccessPoint(neighbour, numberOfHops);
 			return null;
 		});
 		

@@ -27,7 +27,7 @@ public class RoutingNodeComponent extends AbstractComponent{
 	public static final String ROUTING_NODE_REGISTRATION_OUTBOUN_PORT_URI = "ROUTING_NODE_REGISTRATION_OUTBOUN_PORT_URI";
 	public static final String ROUTING_NODE_COMMUNICATION_OUTBOUN_PORT_URI = "ROUTING_NODE_COMMUNICATION_OUTBOUN_PORT_URI";
 	public static final String ROUTING_NODE_COMMUNICATION_INBOUN_PORT_URI = "ROUTING_NODE_COMMUNICATION_INBOUN_PORT_URI";
-	public static final String ROUTING_NODE_ROUTING_INBOUND_PORT_URI = "ROUTING_NODE_ROiTiNG_INBOUND_PORT_URI";
+	public static final String ROUTING_NODE_ROUTING_INBOUND_PORT_URI = "ROUTING_NODE_ROUTING_INBOUND_PORT_URI";
 	
 	private RoutingNodeCommunicationInboundPort routingNodeCommunicationInboundPort;
 	private RoutingNodeCommunicationOutboundPort routingNodeCommunicationOutboundPort;
@@ -67,16 +67,15 @@ public class RoutingNodeComponent extends AbstractComponent{
 	
 	@Override
 	public synchronized void execute() throws Exception {
-		// TODO Auto-generated method stub	
-		Set<ConnectionInfo> connectionInfos = routingNodeRegistrationOutboundPort.registerRoutigNode(address, ROUTING_NODE_COMMUNICATION_INBOUN_PORT_URI, initialPosition, initialRange, ROUTING_NODE_COMMUNICATION_INBOUN_PORT_URI);
+		Set<ConnectionInfo> connectionInfos = routingNodeRegistrationOutboundPort.registerRoutigNode(address, ROUTING_NODE_COMMUNICATION_INBOUN_PORT_URI, initialPosition, initialRange, ROUTING_NODE_ROUTING_INBOUND_PORT_URI);
 		logMessage("Routing node connections = "+ connectionInfos.size());
 		try {
 			Thread.sleep(2000);
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		routingNodeRegistrationOutboundPort.unregister(address);
-		logMessage("I unregistered my self");
+//		routingNodeRegistrationOutboundPort.unregister(address);
+//		logMessage("I unregistered my self");
 		super.execute();
 	}
 	
@@ -84,6 +83,9 @@ public class RoutingNodeComponent extends AbstractComponent{
 	public synchronized void shutdown() throws ComponentShutdownException {
 		try {
 			routingNodeRegistrationOutboundPort.unpublishPort();
+			routingNodeCommunicationInboundPort.unpublishPort();
+			routingNodeCommunicationOutboundPort.unpublishPort();
+			routingInboundPort.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -93,6 +95,7 @@ public class RoutingNodeComponent extends AbstractComponent{
 	@Override
 	public synchronized void finalise() throws Exception {
 		doPortDisconnection(ROUTING_NODE_REGISTRATION_OUTBOUN_PORT_URI);
+		//doPortDisconnection(ROUTING_NODE_COMMUNICATION_OUTBOUN_PORT_URI);
 		super.finalise();
 	}
 	

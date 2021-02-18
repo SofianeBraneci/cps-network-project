@@ -25,7 +25,7 @@ public class RoutinigNodeRoutingInboundPort extends AbstractInboundPort implemen
 	@Override
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) throws Exception {
 		getOwner().handleRequest(c->{
-			((RoutingCI)c).updateRouting(address, routes);
+			((RoutingNodeComponent)c).updateRouting(address, routes);
 			return null;
 		});
 		
@@ -34,7 +34,7 @@ public class RoutinigNodeRoutingInboundPort extends AbstractInboundPort implemen
 	@Override
 	public void updateAccessPoint(NodeAddressI neighbour, int numberOfHops) throws Exception {
 		getOwner().handleRequest(c->{
-			((RoutingCI)c).updateAccessPoint(neighbour, numberOfHops);
+			((RoutingNodeComponent)c).updateAccessPoint(neighbour, numberOfHops);
 			return null;
 		});
 		
