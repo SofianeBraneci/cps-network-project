@@ -9,7 +9,7 @@ import com.network.common.NodeAddress;
 import com.network.common.NodeComponentInformationWrapper;
 import com.network.common.Position;
 import com.network.common.RouteInfo;
-import com.network.connectors.TerminalNodeAccessPointCommunicationConnector;
+import com.network.connectors.CommunicationConnector;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -40,6 +40,31 @@ public class AccessPointComponent extends AbstractComponent {
 	private NodeAddressI address;
 	private PositionI initialPosition;
 	private double initialRange;
+
+	protected AccessPointComponent(NodeAddressI address, PositionI initialPosition, double initialRange)
+			throws Exception {
+		super(1, 0);
+		this.address = address;
+		this.initialPosition = initialPosition;
+		this.initialRange = initialRange;
+		this.connections = new HashMap<>();
+		this.routes = new HashMap<>();
+		this.accessPointsMap = new HashMap<>();
+		this.accessPointCommunicationInbountPort = new AccessPointCommunicationInbountPort(
+				ACCESS_POINT_COMMUNICATION_INBOUND_PORT_URI, this);
+		this.accessPointCommunicationOutBoundPort = new AccessPointCommunicationOutBoundPort(
+				ACCESS_POINT_COMMUNICATION_OUTBOUND_PORT_URI, this);
+		this.accessPointRoutingInboundPort = new AccessPointRoutingInboundPort(ACCESS_POINT_ROUTING_INBOUND_PORT_URI,
+				this);
+		this.registrationOutboundPort = new AccessPointRegistrationOutboundPort(
+				ACCESS_POINT_REGISTRATION_OUTBOUND_PORT_URI, this);
+		this.accessPointCommunicationInbountPort.publishPort();
+		this.accessPointCommunicationOutBoundPort.publishPort();
+		this.accessPointRoutingInboundPort.publishPort();
+		this.registrationOutboundPort.publishPort();
+		toggleLogging();
+		toggleTracing();
+	}
 
 	protected AccessPointComponent() throws Exception {
 		super(1, 0);
@@ -99,7 +124,7 @@ public class AccessPointComponent extends AbstractComponent {
 	@Override
 	public synchronized void finalise() throws Exception {
 		doPortDisconnection(ACCESS_POINT_REGISTRATION_OUTBOUND_PORT_URI);
-		doPortDisconnection(ACCESS_POINT_COMMUNICATION_OUTBOUND_PORT_URI);
+		// doPortDisconnection(ACCESS_POINT_COMMUNICATION_OUTBOUND_PORT_URI);
 		super.finalise();
 	}
 
@@ -109,13 +134,12 @@ public class AccessPointComponent extends AbstractComponent {
 		logMessage("Connecteddddd");
 		try {
 			doPortConnection(ACCESS_POINT_COMMUNICATION_OUTBOUND_PORT_URI, communicationInboudURI,
-					TerminalNodeAccessPointCommunicationConnector.class.getCanonicalName());
+					CommunicationConnector.class.getCanonicalName());
 			accessPointCommunicationOutBoundPort.connect(address, ACCESS_POINT_COMMUNICATION_INBOUND_PORT_URI);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		;
 
 	}
 

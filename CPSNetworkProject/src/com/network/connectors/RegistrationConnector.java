@@ -9,24 +9,24 @@ import com.network.interfaces.RegistrationCI;
 
 import fr.sorbonne_u.components.connectors.AbstractConnector;
 
-public class RoutinNodeRegistrationConnector  extends AbstractConnector implements RegistrationCI{
+public class RegistrationConnector extends AbstractConnector implements RegistrationCI{
 
-	public RoutinNodeRegistrationConnector() {
-		// TODO Auto-generated constructor stub
+	public RegistrationConnector() {
+		super();
 	}
 
 	@Override
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
 		// TODO Auto-generated method stub
-		return null; //((RegistrationCI)this.offering).registerTerminalNode(address, communicationInboundPortURI, initialPosition, initialRange);
+		return ((RegistrationCI)this.offering).registerTerminalNode(address, communicationInboundPortURI, initialPosition, initialRange);
 	}
 
 	@Override
 	public Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
 		// TODO Auto-generated method stub
-		return null;
+		return ((RegistrationCI) this.offering).registerAccessPoint(address, communicationInboundPortURI, initialPosition, initialRange, routingInboundPortURI);
 	}
 
 	@Override
@@ -38,9 +38,7 @@ public class RoutinNodeRegistrationConnector  extends AbstractConnector implemen
 
 	@Override
 	public void unregister(NodeAddressI address) throws Exception {
-		// TODO Auto-generated method stub
-		((RegistrationCI)this.offering).unregister(address);
-		
+			((RegistrationCI)this.offering).unregister(address);
 	}
 
 }

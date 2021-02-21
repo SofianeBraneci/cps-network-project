@@ -6,40 +6,41 @@ import com.network.interfaces.NodeAddressI;
 
 import fr.sorbonne_u.components.connectors.AbstractConnector;
 
-public class CommunicationCIConnector extends AbstractConnector implements CommunicationCI{
+public class CommunicationConnector extends AbstractConnector implements CommunicationCI {
 
-	public CommunicationCIConnector() {
+	public CommunicationConnector() {
 		super();
-	}
 
+	}
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
-		((CommunicationCI)this.offering).connect(address, communicationInboudURI);
+		// TODO Auto-generated method stub
+		((CommunicationCI)offering).connect(address, communicationInboudURI);
+		
 	}
 
 	@Override
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
 		// TODO Auto-generated method stub
+		((CommunicationCI)offering).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 		
 	}
 
 	@Override
 	public void transmitMessag(MessageI m) throws Exception {
-		// TODO Auto-generated method stub
-		
+		((CommunicationCI)offering).transmitMessag(m);
 	}
 
 	@Override
 	public boolean hasRouteFor(NodeAddressI address) throws Exception {
 		// TODO Auto-generated method stub
-		return false;
+		return ((CommunicationCI)offering).hasRouteFor(address);
 	}
 
 	@Override
 	public void ping() throws Exception {
-		// TODO Auto-generated method stub
-		
+		((CommunicationCI)offering).ping();
 	}
 
 }

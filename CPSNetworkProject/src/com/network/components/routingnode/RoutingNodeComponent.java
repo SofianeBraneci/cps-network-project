@@ -40,7 +40,28 @@ public class RoutingNodeComponent extends AbstractComponent{
 	private NodeAddressI address;
 	private PositionI initialPosition;
 	private double initialRange;
-	
+
+	protected RoutingNodeComponent(NodeAddressI address, PositionI initiaPosition, double initialRange) throws Exception{
+		super(1, 0);
+		this.address = address;
+		this.initialPosition = initiaPosition;
+		this.initialRange = initialRange;
+		this.connections = new HashMap<>();
+		this.routes = new HashMap<>();
+		this.accessPointsMap = new HashMap<>();
+		
+		this.routingNodeCommunicationInboundPort = new RoutingNodeCommunicationInboundPort(ROUTING_NODE_COMMUNICATION_INBOUN_PORT_URI, this);
+		this.routingNodeCommunicationOutboundPort = new RoutingNodeCommunicationOutboundPort(ROUTING_NODE_COMMUNICATION_OUTBOUN_PORT_URI, this);
+		this.routingNodeRegistrationOutboundPort = new RoutingNodeRegistrationOutboundPort(ROUTING_NODE_REGISTRATION_OUTBOUN_PORT_URI, this);
+		this.routingInboundPort = new RoutinigNodeRoutingInboundPort(ROUTING_NODE_ROUTING_INBOUND_PORT_URI, this);
+		
+		this.routingNodeCommunicationInboundPort.publishPort();
+		this.routingNodeCommunicationOutboundPort.publishPort();
+		this.routingNodeRegistrationOutboundPort.publishPort();
+		this.routingInboundPort.publishPort();
+		toggleLogging();
+		toggleTracing();
+	}
 	protected RoutingNodeComponent() throws Exception{
 		super(1, 0);
 		this.address = new NodeAddress("some ip");

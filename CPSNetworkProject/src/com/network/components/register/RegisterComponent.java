@@ -20,7 +20,8 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 @OfferedInterfaces(offered = { RegistrationCI.class })
 public class RegisterComponent extends AbstractComponent {
 
-	protected RegisterServiceInboundPort registerPort1, registerPort2, registerPort3;
+	protected RegisterServiceInboundPort registerPort;
+	public static final String REGISTER_INBOUND_PORT_URI = "REGISTER_INBOUND_PORT_URI";
 	public static final String REGISTER_INBOUND_PORT_URI1 = "REGISTER_INBOUND_PORT_URI1";
 	public static final String REGISTER_INBOUND_PORT_URI2 = "REGISTER_INBOUND_PORT_URI12";
 	public static final String REGISTER_INBOUND_PORT_URI3 = "REGISTER_INBOUND_PORT_URI13";
@@ -36,12 +37,8 @@ public class RegisterComponent extends AbstractComponent {
 	protected RegisterComponent() {
 		super(10, 0);
 		try {
-			registerPort1 = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI1, this);
-			registerPort1.publishPort();
-			registerPort2 = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI2, this);
-			registerPort2.publishPort();
-			registerPort3 = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI3, this);
-			registerPort3.publishPort();
+			registerPort = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI, this);
+			registerPort.publishPort();
 			terminalNodesTable = new HashMap<>();
 			routinNodesTable = new HashMap<>();
 			accessPointsNodesTable = new HashMap<>();
@@ -92,9 +89,7 @@ public class RegisterComponent extends AbstractComponent {
 	public synchronized void shutdown() throws ComponentShutdownException {
 		// TODO Auto-generated method stub
 		try {
-			registerPort1.unpublishPort();
-			registerPort2.unpublishPort();
-			registerPort3.unpublishPort();
+			registerPort.unpublishPort();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			throw new ComponentShutdownException(e);
@@ -153,7 +148,6 @@ public class RegisterComponent extends AbstractComponent {
 		terminalNodesTable.remove(address);
 		routinNodesTable.remove(address);
 		accessPointsNodesTable.remove(address);
-		System.err.println("Table size " + terminalNodesTable.size());
 		logMessage("A node was unregistered");
 
 	}
