@@ -1,8 +1,7 @@
-package com.network.components.terminalnode;
+package com.network.common;
 
 import java.util.Set;
 
-import com.network.common.ConnectionInfo;
 import com.network.interfaces.NodeAddressI;
 import com.network.interfaces.PositionI;
 import com.network.interfaces.RegistrationCI;
@@ -10,18 +9,16 @@ import com.network.interfaces.RegistrationCI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 
-public class TerminalNodeRegistrationOutboundPort extends AbstractOutboundPort implements RegistrationCI{
+public class RegistrationOutboundPort  extends AbstractOutboundPort implements RegistrationCI{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public TerminalNodeRegistrationOutboundPort(String uri, ComponentI owner) throws Exception {
-		super(uri, RegistrationCI.class, owner);
-		System.err.println("CICI");
+	public RegistrationOutboundPort(String uri, ComponentI owner) throws Exception {
+		super(uri, RegistrationCI.class,  owner);
 	}
-
 	@Override
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {

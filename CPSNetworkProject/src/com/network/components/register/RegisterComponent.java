@@ -22,10 +22,6 @@ public class RegisterComponent extends AbstractComponent {
 
 	protected RegisterServiceInboundPort registerPort;
 	public static final String REGISTER_INBOUND_PORT_URI = "REGISTER_INBOUND_PORT_URI";
-	public static final String REGISTER_INBOUND_PORT_URI1 = "REGISTER_INBOUND_PORT_URI1";
-	public static final String REGISTER_INBOUND_PORT_URI2 = "REGISTER_INBOUND_PORT_URI12";
-	public static final String REGISTER_INBOUND_PORT_URI3 = "REGISTER_INBOUND_PORT_URI13";
-
 
 	// terminal nodes
 	private Map<NodeAddressI, NodeComponentInformationWrapper> terminalNodesTable;
@@ -101,46 +97,45 @@ public class RegisterComponent extends AbstractComponent {
 		super.execute();
 //		terminalNodesTable.put(new NodeAddress("IP Address"),
 //				new NodeComponentInformationWrapper("sd", new Position(12, 3)));
-//		accessPointsNodesTable.put(new NodeAddress("IP"),
-//				new NodeComponentInformationWrapper("ddd", new Position(12, 12), "fdfd"));
+		accessPointsNodesTable.put(new NodeAddress("IP"),
+				new NodeComponentInformationWrapper("TEST_ACCESSPOINT_PORT_URI", new Position(12, 12), "fdfd"));
 		routinNodesTable.put(new NodeAddress("IPP"),
-				new NodeComponentInformationWrapper("dddddd", new Position(12, 10), "fff"));
+				new NodeComponentInformationWrapper("TEST_ROUTING_PORT_URI", new Position(12, 10), "fff"));
 
 		System.err.println("Excuted\n");
 
 	}
 
+	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 	Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) {
-
-		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 0);
+		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 1);
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		terminalNodesTable.put(address,
 				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
 		System.err.println("current terminal nodes table size " + terminalNodesTable.size());
-		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
-		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		return neighbores;
 	}
 
+
 	Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
-		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 2);
+		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, Double.POSITIVE_INFINITY, 2);
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
 		accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
 				initialPosition, routingInboundPortURI));
 		System.err.println("current access points  table size " + accessPointsNodesTable.size());
-		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 0));
-		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		return neighbores;
 	}
 
 	Set<ConnectionInfo> registerRoutigNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 2);
+		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
 		routinNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition,
 				routingInboundPortURI));
 		System.err.println("current routing table size " + routinNodesTable.size());
-		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 0));
-		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
+
 		return neighbores;
 	}
 

@@ -1,22 +1,17 @@
 package com.network.common;
 
 import com.network.interfaces.NodeAddressI;
-import com.network.interfaces.PositionI;
 
 public class ConnectionInfo {
 	
 	private NodeAddressI address;
 	private String communicationInboundPortURI, routingInboundPortURI;
-	private PositionI position;
 	private boolean isRoutning;
 
-	public ConnectionInfo(NodeAddressI address, String communicationInboundPortURI, String routingInboundPortURI,
-			PositionI position, boolean isRoutning) {
-		super();
+	public ConnectionInfo(NodeAddressI address, String communicationInboundPortURI, String routingInboundPortURI, boolean isRoutning) {
 		this.address = address;
 		this.communicationInboundPortURI = communicationInboundPortURI;
 		this.routingInboundPortURI = routingInboundPortURI;
-		this.position = position;
 		this.isRoutning = isRoutning;
 	}
 

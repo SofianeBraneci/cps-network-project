@@ -41,8 +41,9 @@ public class NodeComponentInformationWrapper {
 	}
 
 	public static ConnectionInfo getConnectionInfo(NodeAddressI address, NodeComponentInformationWrapper wrapper) {
-		return new ConnectionInfo(address, wrapper.communicationInboundPortURI,
-				wrapper.routingInboundPortURI == null ? null : wrapper.routingInboundPortURI, 
-				wrapper.initialPosition, wrapper.routingInboundPortURI == null? false : true);
+		
+		return new ConnectionInfo(address, wrapper.communicationInboundPortURI, 
+				wrapper.routingInboundPortURI == null? null : wrapper.routingInboundPortURI,
+						wrapper.routingInboundPortURI == null? false : true);
 	}
 }
