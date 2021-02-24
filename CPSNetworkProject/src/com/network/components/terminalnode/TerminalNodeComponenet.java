@@ -9,7 +9,6 @@ import com.network.common.ConnectionInfo;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
-import com.network.common.UriPortsBaseNames;
 import com.network.components.register.RegisterComponent;
 import com.network.connectors.CommunicationConnector;
 import com.network.connectors.RegistrationConnector;
@@ -28,15 +27,6 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 @OfferedInterfaces(offered = { CommunicationCI.class })
 public class TerminalNodeComponenet extends AbstractComponent {
 
-	private static Object mutex = new Object();
-	private static int componentCounter = 1;
-	private int componentId;
-
-	// will be used for naming
-	private final String TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI;
-	private final String TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI;
-	private final String TERMINAL_NODE_COMMINICATION_OUTBOUND_PORT_URI;
-
 	protected RegistrationOutboundPort terminalNodeRegistrationOutboundPort;
 	protected TerminalNodeCommunicationInboundPort terminalNodeCommunicationInboundPort;
 	private NodeAddressI address;
@@ -44,32 +34,17 @@ public class TerminalNodeComponenet extends AbstractComponent {
 	private double initialRange;
 	// for keeping track of all the nodes with routing capability
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnections;
-	private int outBoundPortsCount = 0;
 
 	protected TerminalNodeComponenet(NodeAddressI address, PositionI initialPosition, double initialRange) {
 		super(10, 0);
-		synchronized (mutex) {
-			componentId = componentCounter++;
-		}
-		System.err.println(componentId);
-
-		TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI = UriPortsBaseNames.BASE_TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI
-				+ "-" + componentId;
-		TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI = UriPortsBaseNames.BASE_TERMINAL_NODE_COMMUNICATION_OUTBOUND_PORT_URI
-				+ "-" + componentId;
-		TERMINAL_NODE_COMMINICATION_OUTBOUND_PORT_URI = UriPortsBaseNames.BASE_TERMINAL_NODE_COMMUNICATION_OUTBOUND_PORT_URI
-				+ "-" + componentId;
-
 		this.address = address;
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
 		this.communicationConnections = new HashMap<>();
 
 		try {
-			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(
-					TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI, this);
-			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(
-					TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI, this);
+			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort( this);
+			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(this);
 			this.terminalNodeRegistrationOutboundPort.publishPort();
 			this.terminalNodeCommunicationInboundPort.publishPort();
 		} catch (Exception e) {
@@ -83,25 +58,14 @@ public class TerminalNodeComponenet extends AbstractComponent {
 
 	protected TerminalNodeComponenet() {
 		super(10, 0);
-		synchronized (mutex) {
-			componentId = componentCounter++;
-			TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI = UriPortsBaseNames.BASE_TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI
-					+ "-" + componentId;
-			TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI = UriPortsBaseNames.BASE_ACCESS_POINT_NODE_REGISTRATION_OUTBOUND_PORT_URI
-					+ "-" + componentId;
-			TERMINAL_NODE_COMMINICATION_OUTBOUND_PORT_URI = UriPortsBaseNames.BASE_TERMINAL_NODE_COMMUNICATION_OUTBOUND_PORT_URI
-					+ "-" + componentId;
-		}
 
 		this.address = new NodeAddress("Some IP");
 		this.initialPosition = new Position(1, 2);
 		this.initialRange = 200;
 		this.communicationConnections = new HashMap<>();
 		try {
-			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(
-					TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI, this);
-			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(
-					TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI, this);
+			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
+			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(this);
 			this.terminalNodeRegistrationOutboundPort.publishPort();
 			this.terminalNodeCommunicationInboundPort.publishPort();
 		} catch (Exception e) {
@@ -122,13 +86,11 @@ public class TerminalNodeComponenet extends AbstractComponent {
 		 **/
 		System.err.println("CONNECTING TO OTHER NODES VIA : " + communicationInboudURI);
 		try {
-			String newCommunicationOutBoundPort = TERMINAL_NODE_COMMINICATION_OUTBOUND_PORT_URI + "-"
-					+ (++outBoundPortsCount);
-			CommunicationOutBoundPort port = new CommunicationOutBoundPort(newCommunicationOutBoundPort, this);
+			CommunicationOutBoundPort port = new CommunicationOutBoundPort( this);
 			port.publishPort();
-			doPortConnection(newCommunicationOutBoundPort, communicationInboudURI,
+			doPortConnection(port.getPortURI(), communicationInboudURI,
 					CommunicationConnector.class.getCanonicalName());
-			port.connect(this.address, TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI);
+			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
 			communicationConnections.put(address, port);
 		} catch (Exception e) {
 
@@ -163,12 +125,12 @@ public class TerminalNodeComponenet extends AbstractComponent {
 	public synchronized void execute() throws Exception {
 
 		// do a port connection with the register
-		doPortConnection(TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI, RegisterComponent.REGISTER_INBOUND_PORT_URI,
+		doPortConnection(terminalNodeRegistrationOutboundPort.getPortURI(), RegisterComponent.REGISTER_INBOUND_PORT_URI,
 				RegistrationConnector.class.getCanonicalName());
 
 		// register the node and get the neighbors
 		Set<ConnectionInfo> connectionInfos = terminalNodeRegistrationOutboundPort.registerTerminalNode(address,
-				TERMINAL_NODE_COMMUNICATION_INBOUND_PORT_URI, initialPosition, initialRange);
+				terminalNodeCommunicationInboundPort.getPortURI(), initialPosition, initialRange);
 
 		// connect with them
 		this.logMessage("TERMINAL NODE connection size = " + connectionInfos.size());
@@ -187,7 +149,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 	@Override
 	public synchronized void finalise() throws Exception {
 		// TODO Auto-generated method stub
-		doPortDisconnection(TERMINAL_NODE_REGISTRATION_OUTBOUND_PORT_URI);
+		doPortDisconnection(terminalNodeRegistrationOutboundPort.getPortURI());
 		for (CommunicationOutBoundPort port : communicationConnections.values()) {
 			doPortDisconnection(port.getPortURI());
 		}

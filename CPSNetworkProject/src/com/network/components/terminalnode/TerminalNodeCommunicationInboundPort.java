@@ -13,6 +13,10 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	 */
 	private static final long serialVersionUID = 1L;
 
+	public TerminalNodeCommunicationInboundPort(ComponentI owner) throws Exception{
+		super(CommunicationCI.class, owner);
+	}
+	
 	public TerminalNodeCommunicationInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, CommunicationCI.class, owner);
 		assert owner instanceof TerminalNodeComponenet;

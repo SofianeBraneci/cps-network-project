@@ -13,6 +13,10 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	public AccessPointCommunicationInbountPort(ComponentI owner) throws Exception {
+		super(CommunicationCI.class, owner);
+	}
 
 	public AccessPointCommunicationInbountPort(String uri, ComponentI owner) throws Exception {
 		// TODO Auto-generated constructor stub

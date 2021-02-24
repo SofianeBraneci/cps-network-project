@@ -13,6 +13,9 @@ public class CommunicationOutBoundPort extends AbstractOutboundPort implements C
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	public CommunicationOutBoundPort(ComponentI owner) throws Exception {
+		super(CommunicationCI.class, owner);
+	}
 
 	public CommunicationOutBoundPort(String uri, ComponentI owner) throws Exception {
 

@@ -9,13 +9,17 @@ import com.network.interfaces.RoutingCI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 
-public class RoutinigNodeRoutingInboundPort extends AbstractInboundPort implements RoutingCI{
+public class RoutingNodeRoutingInboundPort extends AbstractInboundPort implements RoutingCI{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public RoutinigNodeRoutingInboundPort(String uri, ComponentI owner)
+	public RoutingNodeRoutingInboundPort(ComponentI owner) throws Exception{
+		super(RoutingCI.class, owner);
+	}
+	
+	public RoutingNodeRoutingInboundPort(String uri, ComponentI owner)
 			throws Exception {
 		super(uri, RoutingCI.class, owner);
 	}

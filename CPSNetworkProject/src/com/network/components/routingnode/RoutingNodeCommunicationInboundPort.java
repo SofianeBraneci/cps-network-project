@@ -14,6 +14,10 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 	 */
 	private static final long serialVersionUID = 1L;
 
+	public RoutingNodeCommunicationInboundPort (ComponentI owner) throws Exception{
+		super(CommunicationCI.class, owner);
+	}
+	
 	public RoutingNodeCommunicationInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, CommunicationCI.class, owner);
 		assert owner instanceof RoutingNodeComponent;

@@ -15,6 +15,10 @@ public class RegistrationOutboundPort  extends AbstractOutboundPort implements R
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	public RegistrationOutboundPort(ComponentI owner) throws Exception{
+		super(RegistrationCI.class, owner);
+	}
 
 	public RegistrationOutboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, RegistrationCI.class,  owner);

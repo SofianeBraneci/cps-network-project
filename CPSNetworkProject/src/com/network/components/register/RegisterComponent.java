@@ -21,7 +21,7 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 public class RegisterComponent extends AbstractComponent {
 
 	protected RegisterServiceInboundPort registerPort;
-	public static final String REGISTER_INBOUND_PORT_URI = "REGISTER_INBOUND_PORT_URI";
+	public static  String REGISTER_INBOUND_PORT_URI;
 
 	// terminal nodes
 	private Map<NodeAddressI, NodeComponentInformationWrapper> terminalNodesTable;
@@ -33,7 +33,8 @@ public class RegisterComponent extends AbstractComponent {
 	protected RegisterComponent() {
 		super(10, 0);
 		try {
-			registerPort = new RegisterServiceInboundPort(REGISTER_INBOUND_PORT_URI, this);
+			registerPort = new RegisterServiceInboundPort(this);
+			REGISTER_INBOUND_PORT_URI  = registerPort.getPortURI();
 			registerPort.publishPort();
 			terminalNodesTable = new HashMap<>();
 			routinNodesTable = new HashMap<>();

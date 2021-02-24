@@ -13,6 +13,10 @@ public class AccessPointRoutingInboundPort extends AbstractInboundPort implement
 
 	private static final long serialVersionUID = 1L;
 
+	public AccessPointRoutingInboundPort(ComponentI owner) throws Exception{
+		super(RoutingCI.class, owner);
+	}
+	
 	public AccessPointRoutingInboundPort(String uri, ComponentI owner)
 			throws Exception {
 		super(uri, RoutingCI.class, owner);
