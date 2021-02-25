@@ -15,6 +15,7 @@ public class CommunicationConnector extends AbstractConnector implements Communi
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
 		// TODO Auto-generated method stub
+		System.err.println("normal connection");
 		((CommunicationCI)offering).connect(address, communicationInboudURI);
 		
 	}
@@ -23,6 +24,7 @@ public class CommunicationConnector extends AbstractConnector implements Communi
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
 		// TODO Auto-generated method stub
+		System.err.println("connection routing ");
 		((CommunicationCI)offering).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 		
 	}

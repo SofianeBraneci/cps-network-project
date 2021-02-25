@@ -7,7 +7,6 @@ import java.util.Set;
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
 import com.network.common.NodeAddress;
-import com.network.common.NodeComponentInformationWrapper;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
 import com.network.common.RouteInfo;
@@ -33,7 +32,8 @@ public class AccessPointComponent extends AbstractComponent {
 	private AccessPointCommunicationInbountPort accessPointCommunicationInbountPort;
 	private RegistrationOutboundPort registrationOutboundPort;
 	private AccessPointRoutingInboundPort accessPointRoutingInboundPort;
-	private Map<NodeAddressI, NodeComponentInformationWrapper> connections;
+
+	// this map represents the neighbors of the current node
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnectionPorts;
 
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
@@ -49,7 +49,6 @@ public class AccessPointComponent extends AbstractComponent {
 		this.address = address;
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
-		this.connections = new HashMap<>();
 		this.communicationConnectionPorts = new HashMap<>();
 		this.routes = new HashMap<>();
 		this.accessPointsMap = new HashMap<>();
@@ -69,7 +68,6 @@ public class AccessPointComponent extends AbstractComponent {
 		this.address = new NodeAddress("some ip");
 		this.initialPosition = new Position(12, 23);
 		this.initialRange = 120;
-		this.connections = new HashMap<>();
 		this.routes = new HashMap<>();
 		this.accessPointsMap = new HashMap<>();
 		this.communicationConnectionPorts = new HashMap<>();
@@ -93,10 +91,16 @@ public class AccessPointComponent extends AbstractComponent {
 		Set<ConnectionInfo> connectionInfos = registrationOutboundPort.registerAccessPoint(address,
 				accessPointCommunicationInbountPort.getPortURI(), initialPosition, initialRange,
 				accessPointRoutingInboundPort.getPortURI());
+
 		logMessage("Access Point node connections = " + connectionInfos.size());
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-			logMessage(connectionInfo.getCommunicationInboudPort());
+			if (!connectionInfo.getCommunicationInboudPort().startsWith("TEST")) {
+
+				this.connectRouting(address, connectionInfo.getCommunicationInboudPort(),
+						connectionInfo.getRoutingInboundPortURI());
+			}
+
 		}
 
 		super.execute();
@@ -126,12 +130,17 @@ public class AccessPointComponent extends AbstractComponent {
 	}
 
 	void connect(NodeAddressI address, String communicationInboudURI) {
+		logMessage(this + "");
 		logMessage("FROM ACCESS POINT NODE, CONNECTION WAS INVOKED !!!!! " + communicationInboudURI);
 		// create a new communication out bound port
 		// register it, and do a simple port connection
+
 		try {
+			if (communicationConnectionPorts.containsKey(address))
+				return;
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
+
 			doPortConnection(port.getPortURI(), communicationInboudURI,
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnectionPorts.put(address, port);
@@ -144,18 +153,25 @@ public class AccessPointComponent extends AbstractComponent {
 	}
 
 	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
+		logMessage("FROM ACCESS POINT NODE, CONNECTION ROUTING WAS INVOKED !!!!! " + communicationInboudPortURI);
+		try {
 
-		try{
+			if (communicationConnectionPorts.containsKey(address))
+				return;
+
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
-			doPortConnection(port.getPortURI()
-					, communicationInboudPortURI,
+
+			this.doPortConnection(port.getPortURI(), communicationInboudPortURI,
 					CommunicationConnector.class.getCanonicalName());
+	
 			port.connectRouting(address, accessPointCommunicationInbountPort.getPortURI(),
 					accessPointRoutingInboundPort.getPortURI());
 			communicationConnectionPorts.put(address, port);
+
+			logMessage("ACCESS POINT NODE : A NEW CONNECTION WAS ESTABLISHED !!!");
+
 		} catch (Exception e) {
-			// TODO: handle exception
 		}
 	}
 
@@ -166,7 +182,7 @@ public class AccessPointComponent extends AbstractComponent {
 	}
 
 	boolean hasRouteFor(NodeAddressI address) {
-		return connections.containsKey(address);
+		return false;
 	}
 
 	void ping() {

@@ -43,13 +43,11 @@ public class TerminalNodeComponenet extends AbstractComponent {
 		this.communicationConnections = new HashMap<>();
 
 		try {
-			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort( this);
+			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
 			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(this);
 			this.terminalNodeRegistrationOutboundPort.publishPort();
 			this.terminalNodeCommunicationInboundPort.publishPort();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 		this.toggleLogging();
@@ -84,14 +82,19 @@ public class TerminalNodeComponenet extends AbstractComponent {
 		 * connections table, then do a port connection
 		 * 
 		 **/
+		logMessage(this + " component");
 		System.err.println("CONNECTING TO OTHER NODES VIA : " + communicationInboudURI);
 		try {
-			CommunicationOutBoundPort port = new CommunicationOutBoundPort( this);
+			if (communicationConnections.containsKey(address))
+				return;
+			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
+			
 			doPortConnection(port.getPortURI(), communicationInboudURI,
 					CommunicationConnector.class.getCanonicalName());
-			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
 			communicationConnections.put(address, port);
+			
+			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
 		} catch (Exception e) {
 
 			// TODO Auto-generated catch block
@@ -113,8 +116,9 @@ public class TerminalNodeComponenet extends AbstractComponent {
 
 	}
 
+	// no routing capability
 	boolean hasRouteFor(NodeAddressI address) {
-		return communicationConnections.containsKey(address);
+		return false;
 	}
 
 	void ping() {
@@ -138,7 +142,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 			if (connectionInfo.getCommunicationInboudPort().startsWith("TEST"))
 				continue;
 			else {
-				logMessage(connectionInfo.getCommunicationInboudPort());
+				System.err.println(connectionInfo.getCommunicationInboudPort());
 				this.connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
 			}
 		}

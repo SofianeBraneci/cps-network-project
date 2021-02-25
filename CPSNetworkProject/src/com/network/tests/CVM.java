@@ -21,16 +21,12 @@ public class CVM extends AbstractCVM{
 
 		
 		AbstractComponent.createComponent(RegisterComponent.class.getCanonicalName(), new Object[]{});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(), new Object[]{new NodeAddress("192.168.25.1"), new Position(2, 1), 200.0});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(), new Object[]{new NodeAddress("192.168.25.1"), new Position(2, 1), 200.0});
+
+		AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.2"), new Position(3, 2), 2000.0});
 		
-		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(), new Object[]{new NodeAddress("192.168.25.1"), new Position(2, 1), 200.0});
-		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(), new Object[]{new NodeAddress("192.168.25.1"), new Position(2, 1), 200.0});
-
-		AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.2"), new Position(3, 2), 200.0});
-
-			
-//		String routigURI = AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(), new Object[] {new NodeAddress("192.168.25.3"), new Position(21, 11), 300.0});
-//		doPortConnection(routigURI, RoutingNodeComponent.ROUTING_NODE_REGISTRATION_OUTBOUN_PORT_URI, RegisterComponent.REGISTER_INBOUND_PORT_URI, 
-//				RegistrationConnector.class.getCanonicalName());;
+		
 		super.deploy();
 	}
 

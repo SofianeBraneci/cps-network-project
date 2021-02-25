@@ -39,8 +39,6 @@ public class RegisterComponent extends AbstractComponent {
 			terminalNodesTable = new HashMap<>();
 			routinNodesTable = new HashMap<>();
 			accessPointsNodesTable = new HashMap<>();
-			this.toggleLogging();
-			this.toggleTracing();
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
