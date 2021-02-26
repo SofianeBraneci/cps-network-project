@@ -53,7 +53,7 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 	}
 
 	@Override
-	public boolean hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(NodeAddressI address) throws Exception {
 		return getOwner().handleRequest(c -> ((RoutingNodeComponent) c).hasRouteFor(address));
 	}
 

@@ -5,6 +5,7 @@ import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.components.accesspointnode.AccessPointComponent;
 import com.network.components.register.RegisterComponent;
+import com.network.components.routingnode.RoutingNodeComponent;
 import com.network.components.terminalnode.TerminalNodeComponenet;
 
 import fr.sorbonne_u.components.AbstractComponent;
@@ -21,10 +22,9 @@ public class CVM extends AbstractCVM{
 
 		
 		AbstractComponent.createComponent(RegisterComponent.class.getCanonicalName(), new Object[]{});
-		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(), new Object[]{new NodeAddress("192.168.25.1"), new Position(2, 1), 200.0});
-		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(), new Object[]{new NodeAddress("192.168.25.1"), new Position(2, 1), 200.0});
-
-		AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.2"), new Position(3, 2), 2000.0});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(), new Object[]{new NodeAddress("192.168.25.1"), new Position(2, 1), 1200.0});
+		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),  new Object[]{new NodeAddress("192.168.25.2"), new Position(2, 4), 1210.0});
+		AbstractComponent.createComponent(TerminalNodeComponenet.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
 		
 		
 		super.deploy();

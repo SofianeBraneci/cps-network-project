@@ -54,7 +54,7 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 	}
 
 	@Override
-	public boolean hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(NodeAddressI address) throws Exception {
 		return getOwner().handleRequest(c -> ((CommunicationCI) c).hasRouteFor(address));
 	}
 

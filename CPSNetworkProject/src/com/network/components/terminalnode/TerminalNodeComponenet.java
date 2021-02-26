@@ -36,7 +36,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnections;
 
 	protected TerminalNodeComponenet(NodeAddressI address, PositionI initialPosition, double initialRange) {
-		super(10, 0);
+		super(1, 0);
 		this.address = address;
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
@@ -50,8 +50,6 @@ public class TerminalNodeComponenet extends AbstractComponent {
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
-		this.toggleLogging();
-		this.toggleTracing();
 	}
 
 	protected TerminalNodeComponenet() {
@@ -71,8 +69,6 @@ public class TerminalNodeComponenet extends AbstractComponent {
 			// e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
-		this.toggleLogging();
-		this.toggleTracing();
 	}
 
 	void connect(NodeAddressI address, String communicationInboudURI) {
@@ -82,19 +78,16 @@ public class TerminalNodeComponenet extends AbstractComponent {
 		 * connections table, then do a port connection
 		 * 
 		 **/
-		logMessage(this + " component");
-		System.err.println("CONNECTING TO OTHER NODES VIA : " + communicationInboudURI);
 		try {
 			if (communicationConnections.containsKey(address))
 				return;
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
-			
+
 			doPortConnection(port.getPortURI(), communicationInboudURI,
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnections.put(address, port);
-			
-			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
+			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED !!!");
 		} catch (Exception e) {
 
 			// TODO Auto-generated catch block
@@ -110,15 +103,15 @@ public class TerminalNodeComponenet extends AbstractComponent {
 
 	void transmitMessag(MessageI m) {
 		// Check if it has a route to message's address and send it via that port, else
-		if (hasRouteFor((NodeAddressI) m.getAddress())) {
-
-		}
-
+		
 	}
 
 	// no routing capability
-	boolean hasRouteFor(NodeAddressI address) {
-		return false;
+	int hasRouteFor(NodeAddressI address) {
+		/**
+		 * should ask for all  neighbors if they have a route for that address
+		 * */
+		return 0;
 	}
 
 	void ping() {
@@ -137,15 +130,15 @@ public class TerminalNodeComponenet extends AbstractComponent {
 				terminalNodeCommunicationInboundPort.getPortURI(), initialPosition, initialRange);
 
 		// connect with them
-		this.logMessage("TERMINAL NODE connection size = " + connectionInfos.size());
+		System.out.println("TERMINAL NODE connection size = " + connectionInfos.size());
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 			if (connectionInfo.getCommunicationInboudPort().startsWith("TEST"))
 				continue;
 			else {
-				System.err.println(connectionInfo.getCommunicationInboudPort());
 				this.connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
 			}
 		}
+		terminalNodeRegistrationOutboundPort.unregister(address);
 		super.execute();
 
 	}

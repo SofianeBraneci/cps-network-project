@@ -35,7 +35,7 @@ public class CommunicationConnector extends AbstractConnector implements Communi
 	}
 
 	@Override
-	public boolean hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(NodeAddressI address) throws Exception {
 		// TODO Auto-generated method stub
 		return ((CommunicationCI)offering).hasRouteFor(address);
 	}

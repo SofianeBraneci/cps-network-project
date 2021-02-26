@@ -28,6 +28,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 			((TerminalNodeComponenet) c).connect(address, communicationInboudURI);
 			return null;
 		});
+		
 
 	}
 
@@ -52,7 +53,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	}
 
 	@Override
-	public boolean hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(NodeAddressI address) throws Exception {
 		return getOwner().handleRequest(c -> ((TerminalNodeComponenet) c).hasRouteFor(address));
 	}
 

@@ -101,7 +101,7 @@ public class RegisterComponent extends AbstractComponent {
 		routinNodesTable.put(new NodeAddress("IPP"),
 				new NodeComponentInformationWrapper("TEST_ROUTING_PORT_URI", new Position(12, 10), "fff"));
 
-		System.err.println("Excuted\n");
+		System.err.println("Excuted");
 
 	}
 
@@ -142,7 +142,7 @@ public class RegisterComponent extends AbstractComponent {
 		terminalNodesTable.remove(address);
 		routinNodesTable.remove(address);
 		accessPointsNodesTable.remove(address);
-		logMessage("A node was unregistered");
+		System.out.println("A node was unregistered");
 
 	}
 }

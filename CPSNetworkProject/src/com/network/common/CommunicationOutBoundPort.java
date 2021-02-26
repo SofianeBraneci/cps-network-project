@@ -40,7 +40,7 @@ public class CommunicationOutBoundPort extends AbstractOutboundPort implements C
 	}
 
 	@Override
-	public boolean hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(NodeAddressI address) throws Exception {
 		return ((CommunicationCI)getConnector()).hasRouteFor(address);
 	}
 
