@@ -191,7 +191,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	}
 
-	void transmitMessag(MessageI m) {
+	void transmitMessage(MessageI m) {
 		// Check if it has a route to message's address and send it via that port, else
 		// kill it
 

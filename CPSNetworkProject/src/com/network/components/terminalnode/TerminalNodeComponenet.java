@@ -12,6 +12,7 @@ import com.network.common.RegistrationOutboundPort;
 import com.network.components.register.RegisterComponent;
 import com.network.connectors.CommunicationConnector;
 import com.network.connectors.RegistrationConnector;
+import com.network.interfaces.AddressI;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -96,22 +97,64 @@ public class TerminalNodeComponenet extends AbstractComponent {
 
 	}
 
-	// maybe i'll delete it later it's not really required for the terminal node
+	// maybe we'll delete it later it's not really required for the terminal node
 	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
 
 	}
 
-	void transmitMessag(MessageI m) {
+	void transmitMessage(MessageI m) {
 		// Check if it has a route to message's address and send it via that port, else
-		
+		int N = 3;
+		try {
+			if(m.getAddress().equals(this.address)) {
+				System.out.println("MESSAGE ARRIVED TO HIS DESTINATION !");
+				return;
+			}
+			if(m.stillAlive()) {
+				System.out.println("MESSAGE DIED AND HAS BEEN DESTRUCTED!");
+				return;
+			}
+			m.decrementHops();
+			int route = hasRouteFor(m.getAddress());
+			if(route != -1)
+				for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
+					int tmp = cobp.hasRouteFor(address);
+					if(tmp == route) {
+						cobp.transmitMessage(m);
+					}
+				}
+			else {
+				int n = 0;
+				for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
+					if(n == N)
+						break;
+					n++;
+					cobp.transmitMessage(m);
+				}
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	// no routing capability
-	int hasRouteFor(NodeAddressI address) {
+	int hasRouteFor(AddressI address) {
 		/**
 		 * should ask for all  neighbors if they have a route for that address
 		 * */
-		return 0;
+		try {
+			int min = -1;
+			for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
+				int tmp = cobp.hasRouteFor(address);
+				if(min == -1 || (tmp != -1 && tmp < min)) {
+					min = tmp;
+				}
+			}
+			return min;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
 	}
 
 	void ping() {

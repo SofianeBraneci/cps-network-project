@@ -44,9 +44,9 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 	}
 
 	@Override
-	public void transmitMessag(MessageI m) throws Exception {
+	public void transmitMessage(MessageI m) throws Exception {
 		getOwner().handleRequest(c -> {
-			((RoutingNodeComponent) c).transmitMessag(m);
+			((RoutingNodeComponent) c).transmitMessage(m);
 			return null;
 		});
 

@@ -30,8 +30,8 @@ public class CommunicationConnector extends AbstractConnector implements Communi
 	}
 
 	@Override
-	public void transmitMessag(MessageI m) throws Exception {
-		((CommunicationCI)offering).transmitMessag(m);
+	public void transmitMessage(MessageI m) throws Exception {
+		((CommunicationCI)offering).transmitMessage(m);
 	}
 
 	@Override

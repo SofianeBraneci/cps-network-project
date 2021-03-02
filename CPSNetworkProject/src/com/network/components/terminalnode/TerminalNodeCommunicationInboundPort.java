@@ -44,9 +44,9 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	}
 
 	@Override
-	public void transmitMessag(MessageI m) throws Exception {
+	public void transmitMessage(MessageI m) throws Exception {
 		getOwner().handleRequest(c -> {
-			((TerminalNodeComponenet) c).transmitMessag(m);
+			((TerminalNodeComponenet) c).transmitMessage(m);
 			return null;
 		});
 

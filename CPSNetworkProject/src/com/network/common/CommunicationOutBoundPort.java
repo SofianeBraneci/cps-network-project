@@ -1,5 +1,6 @@
 package com.network.common;
 
+import com.network.interfaces.AddressI;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -35,12 +36,12 @@ public class CommunicationOutBoundPort extends AbstractOutboundPort implements C
 	}
 
 	@Override
-	public void transmitMessag(MessageI m) throws Exception {
-		((CommunicationCI)getConnector()).transmitMessag(m);
+	public void transmitMessage(MessageI m) throws Exception {
+		((CommunicationCI)getConnector()).transmitMessage(m);
 	}
 
 	@Override
-	public int hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(AddressI address) throws Exception {
 		return ((CommunicationCI)getConnector()).hasRouteFor(address);
 	}
 

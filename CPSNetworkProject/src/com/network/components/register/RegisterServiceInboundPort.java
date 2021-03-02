@@ -54,9 +54,4 @@ public class RegisterServiceInboundPort extends AbstractInboundPort implements R
 			return null;
 		});
 	}
-
-	
-
-	
-
 }

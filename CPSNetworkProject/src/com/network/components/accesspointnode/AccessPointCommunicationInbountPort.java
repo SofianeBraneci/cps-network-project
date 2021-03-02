@@ -45,9 +45,9 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 	}
 
 	@Override
-	public void transmitMessag(MessageI m) throws Exception {
+	public void transmitMessage(MessageI m) throws Exception {
 		getOwner().handleRequest(c -> {
-			((AccessPointComponent) c).transmitMessag(m);
+			((AccessPointComponent) c).transmitMessage(m);
 			return null;
 		});
 
