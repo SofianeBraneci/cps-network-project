@@ -1,5 +1,6 @@
 package com.network.connectors;
 
+import com.network.interfaces.AddressI;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -35,7 +36,7 @@ public class CommunicationConnector extends AbstractConnector implements Communi
 	}
 
 	@Override
-	public int hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(AddressI address) throws Exception {
 		// TODO Auto-generated method stub
 		return ((CommunicationCI)offering).hasRouteFor(address);
 	}

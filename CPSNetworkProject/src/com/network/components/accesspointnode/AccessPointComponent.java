@@ -15,6 +15,7 @@ import com.network.common.RoutingOutboundPort;
 import com.network.components.register.RegisterComponent;
 import com.network.connectors.CommunicationConnector;
 import com.network.connectors.RegistrationConnector;
+import com.network.interfaces.AddressI;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -197,7 +198,7 @@ public class AccessPointComponent extends AbstractComponent {
 
 	}
 
-	int hasRouteFor(NodeAddressI address) {
+	int hasRouteFor(AddressI address) {
 		return 0;
 	}
 

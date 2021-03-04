@@ -1,5 +1,6 @@
 package com.network.components.terminalnode;
 
+import com.network.interfaces.AddressI;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -53,7 +54,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	}
 
 	@Override
-	public int hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(AddressI address) throws Exception {
 		return getOwner().handleRequest(c -> ((TerminalNodeComponenet) c).hasRouteFor(address));
 	}
 

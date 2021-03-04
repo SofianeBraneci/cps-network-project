@@ -3,6 +3,7 @@ package com.network.components.terminalnode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
@@ -35,6 +36,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 	private double initialRange;
 	// for keeping track of all the nodes with routing capability
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnections;
+	private NodeAddressI sendingAddressI = null;
 
 	protected TerminalNodeComponenet(NodeAddressI address, PositionI initialPosition, double initialRange) {
 		super(1, 0);
@@ -110,19 +112,16 @@ public class TerminalNodeComponenet extends AbstractComponent {
 				System.out.println("MESSAGE ARRIVED TO HIS DESTINATION !");
 				return;
 			}
-			if(m.stillAlive()) {
+			if(! m.stillAlive()) {
 				System.out.println("MESSAGE DIED AND HAS BEEN DESTRUCTED!");
 				return;
 			}
 			m.decrementHops();
 			int route = hasRouteFor(m.getAddress());
-			if(route != -1)
-				for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
-					int tmp = cobp.hasRouteFor(address);
-					if(tmp == route) {
-						cobp.transmitMessage(m);
-					}
-				}
+			if(route != -1) {
+				communicationConnections.get(sendingAddressI).transmitMessage(m);
+			}
+			
 			else {
 				int n = 0;
 				for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
@@ -144,10 +143,11 @@ public class TerminalNodeComponenet extends AbstractComponent {
 		 * */
 		try {
 			int min = -1;
-			for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
-				int tmp = cobp.hasRouteFor(address);
+			for(Entry<NodeAddressI, CommunicationOutBoundPort> e: communicationConnections.entrySet()) {
+				int tmp = e.getValue().hasRouteFor(address);
 				if(min == -1 || (tmp != -1 && tmp < min)) {
 					min = tmp;
+					sendingAddressI = e.getKey();
 				}
 			}
 			return min;

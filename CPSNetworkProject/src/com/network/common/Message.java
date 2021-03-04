@@ -28,7 +28,7 @@ public class Message implements MessageI{
 
 	@Override
 	public boolean stillAlive() {
-		return hops == 0;
+		return hops > 0;
 	}
 
 	@Override

@@ -6,8 +6,9 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="/Users/walidsadat/Downloads/S2/cps/BCM4Java-13012021.jar"/>
-	<classpathentry kind="lib" path="/Users/walidsadat/Downloads/S2/cps/javassist.jar"/>
-	<classpathentry kind="lib" path="/Users/walidsadat/Downloads/S2/cps/jing.jar"/>
+	<classpathentry kind="lib" path="/home/sofiane/Bureau/BCM4Java-13012021.jar"/>
+	<classpathentry kind="lib" path="/home/sofiane/Bureau/javassist.jar"/>
+	<classpathentry kind="lib" path="/home/sofiane/Bureau/jing.jar"/>
+	<classpathentry kind="lib" path="/home/sofiane/Bureau/commons-math3-3.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

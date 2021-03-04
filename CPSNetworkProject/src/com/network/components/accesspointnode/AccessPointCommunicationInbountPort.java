@@ -1,5 +1,6 @@
 package com.network.components.accesspointnode;
 
+import com.network.interfaces.AddressI;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -54,7 +55,7 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 	}
 
 	@Override
-	public int hasRouteFor(NodeAddressI address) throws Exception {
+	public int hasRouteFor(AddressI address) throws Exception {
 		return getOwner().handleRequest(c -> ((CommunicationCI) c).hasRouteFor(address));
 	}
 
