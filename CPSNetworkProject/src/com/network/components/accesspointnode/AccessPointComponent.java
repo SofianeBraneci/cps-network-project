@@ -1,8 +1,10 @@
 package com.network.components.accesspointnode;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
@@ -18,6 +20,7 @@ import com.network.connectors.RegistrationConnector;
 import com.network.interfaces.AddressI;
 import com.network.interfaces.CommunicationCI;
 import com.network.interfaces.MessageI;
+import com.network.interfaces.NetworkAddressI;
 import com.network.interfaces.NodeAddressI;
 import com.network.interfaces.PositionI;
 import com.network.interfaces.RegistrationCI;
@@ -40,14 +43,15 @@ public class AccessPointComponent extends AbstractComponent {
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnectionPorts;
 	// routing ports
 	private Map<NodeAddressI, RoutingOutboundPort> routingOutboundPorts;
-	// route info
+	// route info for access points
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
-	// for hops
+	// for hops for access points
 	private Map<NodeAddressI, Integer> accessPointsMap;
 	// node attributes
 	private NodeAddressI address;
 	private PositionI initialPosition;
 	private double initialRange;
+	private NodeAddressI sendingAddressI;
 
 	protected AccessPointComponent(NodeAddressI address, PositionI initialPosition, double initialRange)
 			throws Exception {
@@ -183,10 +187,25 @@ public class AccessPointComponent extends AbstractComponent {
 			doPortConnection(routingOutboundPort.getPortURI(), routingInboudPortURI,
 					RoutingConnector.class.getCanonicalName());
 
+		
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
-
+			
 			System.out.println("ACCESS POINT NODE : A NEW CONNECTION WAS ESTABLISHED !!!");
+			
+			// ajouter update routing
+
+			for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
+				routingOutboundPort.updateRouting(entry.getKey(), entry.getValue());
+			}
+
+			routingOutboundPort.updateAccessPoint(address, 1);
+			
+			Set<RouteInfo> routeInfos = new HashSet<>();
+			RouteInfo info = new RouteInfo(address, 1);
+			routeInfos.add(info);
+			routes.put(address, routeInfos);
+			
 
 		} catch (Exception e) {
 		}
@@ -196,24 +215,85 @@ public class AccessPointComponent extends AbstractComponent {
 		// Check if it has a route to message's address and send it via that port, else
 		// kill it
 
+		// Check if it has a route to message's address and send it via that port, else
+		int N = 3;
+		try {
+			if (m.getAddress().equals(this.address)) {
+				System.out.println("MESSAGE ARRIVED TO HIS DESTINATION !");
+				return;
+			}
+			if (!m.stillAlive()) {
+				System.out.println("MESSAGE DIED AND HAS BEEN DESTRUCTED!");
+				m = null;
+				return;
+			}
+
+			m.decrementHops();
+			if (m.getAddress() instanceof NetworkAddressI) {
+					System.err.println("A MESSAGE RECEIVED FROM A NETWORK ADDRESS");
+					return;
+				
+		
+			}
+
+
+			int route = hasRouteFor(m.getAddress());
+			if (route != -1) {
+				communicationConnectionPorts.get(sendingAddressI).transmitMessage(m);
+				return;
+			}
+			// inondation
+			else {
+				int n = 0;
+				for (CommunicationOutBoundPort cobp : communicationConnectionPorts.values()) {
+					if (n == N)
+						break;
+					n++;
+					cobp.transmitMessage(m);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	int hasRouteFor(AddressI address) {
-		return 0;
+
+		/**
+		 * should ask for all neighbors if they have a route for that address
+		 */
+		try {
+			int min = -1;
+			for (Entry<NodeAddressI, CommunicationOutBoundPort> e : communicationConnectionPorts.entrySet()) {
+				int tmp = e.getValue().hasRouteFor(address);
+				if (min == -1 || (tmp >= 0 && tmp < min)) {
+					min = tmp;
+					sendingAddressI = e.getKey();
+				}
+
+			}
+
+			return min >= 0 ? min + 1 : -1;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
 	}
+
 
 	void ping() {
 
 	}
 
 	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
-		this.routes.put(address, routes);
-
+		if(! this.routes.containsKey(address)) this.routes.put(address, routes);
+		if (this.routes.get(address).size() > routes.size()) this.routes.put(address, routes);
 	}
 
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
-		accessPointsMap.put(address, numberOfHops);
-
+		if(!accessPointsMap.containsKey(address)) accessPointsMap.put(address, numberOfHops);
+		if(accessPointsMap.get(address) > numberOfHops) accessPointsMap.put(address, numberOfHops);
 	}
 
 }

@@ -121,7 +121,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 			if(route != -1) {
 				communicationConnections.get(sendingAddressI).transmitMessage(m);
 			}
-			
+			// inondation
 			else {
 				int n = 0;
 				for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
@@ -145,12 +145,14 @@ public class TerminalNodeComponenet extends AbstractComponent {
 			int min = -1;
 			for(Entry<NodeAddressI, CommunicationOutBoundPort> e: communicationConnections.entrySet()) {
 				int tmp = e.getValue().hasRouteFor(address);
-				if(min == -1 || (tmp != -1 && tmp < min)) {
+				if(min == -1 || (tmp >= 0 && tmp < min)) {
 					min = tmp;
 					sendingAddressI = e.getKey();
 				}
+				
 			}
-			return min;
+			
+			return min >= 0 ? min : -1;
 		}catch(Exception e) {
 			e.printStackTrace();
 			return -1;
