@@ -20,13 +20,13 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	
 	public TerminalNodeCommunicationInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, CommunicationCI.class, owner);
-		assert owner instanceof TerminalNodeComponenet;
+		assert owner instanceof TerminalNodeComponent;
 	}
 
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
 		getOwner().handleRequest(c -> {
-			((TerminalNodeComponenet) c).connect(address, communicationInboudURI);
+			((TerminalNodeComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
 		
@@ -38,7 +38,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 			throws Exception {
 
 		getOwner().handleRequest(c -> {
-			((TerminalNodeComponenet) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
+			((TerminalNodeComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
 
@@ -47,7 +47,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 	@Override
 	public void transmitMessage(MessageI m) throws Exception {
 		getOwner().handleRequest(c -> {
-			((TerminalNodeComponenet) c).transmitMessage(m);
+			((TerminalNodeComponent) c).transmitMessage(m);
 			return null;
 		});
 
@@ -55,7 +55,7 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 
 	@Override
 	public int hasRouteFor(AddressI address) throws Exception {
-		return getOwner().handleRequest(c -> ((TerminalNodeComponenet) c).hasRouteFor(address));
+		return getOwner().handleRequest(c -> ((TerminalNodeComponent) c).hasRouteFor(address));
 	}
 
 	@Override

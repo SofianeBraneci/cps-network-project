@@ -27,7 +27,7 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 
 @RequiredInterfaces(required = { RegistrationCI.class, CommunicationCI.class })
 @OfferedInterfaces(offered = { CommunicationCI.class })
-public class TerminalNodeComponenet extends AbstractComponent {
+public class TerminalNodeComponent extends AbstractComponent {
 
 	protected RegistrationOutboundPort terminalNodeRegistrationOutboundPort;
 	protected TerminalNodeCommunicationInboundPort terminalNodeCommunicationInboundPort;
@@ -38,7 +38,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnections;
 	private NodeAddressI sendingAddressI = null;
 
-	protected TerminalNodeComponenet(NodeAddressI address, PositionI initialPosition, double initialRange) {
+	protected TerminalNodeComponent(NodeAddressI address, PositionI initialPosition, double initialRange) {
 		super(1, 0);
 		this.address = address;
 		this.initialPosition = initialPosition;
@@ -55,7 +55,7 @@ public class TerminalNodeComponenet extends AbstractComponent {
 		}
 	}
 
-	protected TerminalNodeComponenet() {
+	protected TerminalNodeComponent() {
 		super(10, 0);
 
 		this.address = new NodeAddress("Some IP");
