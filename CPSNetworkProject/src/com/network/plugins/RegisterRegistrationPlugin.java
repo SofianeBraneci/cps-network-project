@@ -9,6 +9,7 @@ import com.network.interfaces.RegistrationCI;
 import com.network.withplugin.components.RegisterComponent;
 import com.network.withplugin.ports.RegisterServiceInboundPortPlugin;
 
+import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.AbstractPlugin;
 import fr.sorbonne_u.components.ComponentI;
 
@@ -23,13 +24,13 @@ public class RegisterRegistrationPlugin extends AbstractPlugin {
 	public static String REGISTER_INBOUND_PORT_URI;
 
 	public RegisterRegistrationPlugin() throws Exception {
-		System.err.println(getOwner());
-
+		super();
 	}
 
 	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) {
+		System.err.println("sssssss");
 		return ((RegisterComponent) getOwner()).registerTerminalNode(address, communicationInboundPortURI,
 				initialPosition, initialRange);
 	}
@@ -69,8 +70,6 @@ public class RegisterRegistrationPlugin extends AbstractPlugin {
 		registerServiceInboundPortPlugin = new RegisterServiceInboundPortPlugin(this.getOwner(), this.getPluginURI());
 		registerServiceInboundPortPlugin.publishPort();
 		REGISTER_INBOUND_PORT_URI = registerServiceInboundPortPlugin.getPortURI();
-
-		
 	}
 
 	@Override

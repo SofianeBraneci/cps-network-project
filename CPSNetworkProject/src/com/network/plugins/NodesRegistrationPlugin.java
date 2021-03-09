@@ -28,6 +28,7 @@ public class NodesRegistrationPlugin extends AbstractPlugin {
 	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
+		System.err.println("CALLED");
 		return registrationOutboundPort.registerTerminalNode(address, communicationInboundPortURI, initialPosition,
 				initialRange);
 	}
@@ -47,13 +48,23 @@ public class NodesRegistrationPlugin extends AbstractPlugin {
 	public void unregister(NodeAddressI address) throws Exception {
 		registrationOutboundPort.unregister(address);
 	}
-
+	
+	public String getRegistrationOutboundURI() {
+		
+		try {
+			return registrationOutboundPort.getPortURI();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	@Override
 	public void initialise() throws Exception {
 		super.initialise();
-		
+		System.out.println("A NODE REGISTRATION PLUGIN IS LAUNCHED");
 		addRequiredInterface(RegistrationCI.class);
-		System.err.println(getOwner().getRequiredInterfaces().length);
 		registrationOutboundPort = new RegistrationOutboundPort(getOwner());
 		registrationOutboundPort.publishPort();
 		
@@ -61,6 +72,7 @@ public class NodesRegistrationPlugin extends AbstractPlugin {
 		getOwner().doPortConnection(registrationOutboundPort.getPortURI(),
 				RegisterRegistrationPlugin.REGISTER_INBOUND_PORT_URI, RegistrationConnector.class.getCanonicalName());
 		System.out.println("A NODE IS CONNECTED TO THE REGISTER!");
+		
 	}
 	
 	@Override

@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.network.common.ConnectionInfo;
+import com.network.common.NodeAddress;
 import com.network.common.NodeComponentInformationWrapper;
+import com.network.common.Position;
 import com.network.components.register.RegisterServiceInboundPort;
 import com.network.interfaces.NodeAddressI;
 import com.network.interfaces.PositionI;
@@ -88,6 +90,7 @@ public class RegisterComponent extends AbstractComponent {
 	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 		public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 				PositionI initialPosition, double initialRange) {
+			System.err.println("RECEIVED");
 			Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 1);
 			neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 			terminalNodesTable.put(address,
@@ -125,18 +128,20 @@ public class RegisterComponent extends AbstractComponent {
 
 		}
 
-	@Override
-	public synchronized void shutdown() throws ComponentShutdownException {
-		// TODO Auto-generated method stub
-		super.shutdown();
-		try {
-			registerPort.unpublishPort();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 
+		@Override
+		public synchronized void execute() throws Exception {
+			super.execute();
+//			terminalNodesTable.put(new NodeAddress("IP Address"),
+//					new NodeComponentInformationWrapper("sd", new Position(12, 3)));
+			accessPointsNodesTable.put(new NodeAddress("IP"),
+					new NodeComponentInformationWrapper("TEST_ACCESSPOINT_PORT_URI", new Position(12, 12), "fdfd"));
+			routinNodesTable.put(new NodeAddress("IPP"),
+					new NodeComponentInformationWrapper("TEST_ROUTING_PORT_URI", new Position(12, 10), "fff"));
+
+			System.err.println("Excuted");
+
+		}
 	@Override
 	public synchronized void finalise() throws Exception {
 		// TODO Auto-generated method stub

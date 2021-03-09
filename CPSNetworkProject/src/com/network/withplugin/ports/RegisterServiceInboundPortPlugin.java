@@ -24,7 +24,6 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 		// TODO Auto-generated constructor stub
 		
 		super(RegistrationCI.class, owner, pluginURI, null);
-		System.out.println(owner + " dfsfsd");
 	}
 
 	@Override
@@ -35,6 +34,7 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 			@Override
 			public Set<ConnectionInfo> call() throws Exception {
 				// TODO Auto-generated method stub
+				System.err.println("IN");
 				return ((RegisterRegistrationPlugin) this.getServiceProviderReference()).registerTerminalNode(address,
 						communicationInboundPortURI, initialPosition, initialRange);
 			}
@@ -49,6 +49,7 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 			@Override
 			public Set<ConnectionInfo> call() throws Exception {
 				// TODO Auto-generated method stub
+				System.err.println("IN");
 				return ((RegisterRegistrationPlugin) this.getServiceProviderReference()).registerAccessPoint(address,
 						communicationInboundPortURI, initialPosition, initialRange, routingInboundPortURI);
 
@@ -63,8 +64,10 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 		// TODO Auto-generated method stub
 		return getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ConnectionInfo>>(this.pluginURI) {
 			@Override
+			
 			public Set<ConnectionInfo> call() throws Exception {
 				// TODO Auto-generated method stub
+				System.err.println("IN");
 				return ((RegisterRegistrationPlugin) this.getServiceProviderReference()).registerRoutigNode(address, commnicationInboundPortURI, initialPosition, initialRange, routingInboundPortURI);
 			}
 			

@@ -34,11 +34,6 @@ public class TerminalNodeComponent extends AbstractComponent {
 		this.initialRange = initialRange;
 
 		try {
-			System.err.println(requiredInterfaces);
-			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
-			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(this);
-			this.terminalNodeRegistrationOutboundPort.publishPort();
-			this.terminalNodeCommunicationInboundPort.publishPort();
 			this.terminalNodeRegistrationPlugin = new NodesRegistrationPlugin();
 			this.terminalNodeRegistrationPlugin.setPluginURI(TERMINAL_NODE_REGISTRATION_PLUGIN_URI);
 			this.installPlugin(terminalNodeRegistrationPlugin);
@@ -55,10 +50,6 @@ public class TerminalNodeComponent extends AbstractComponent {
 		this.initialPosition = new Position(1, 2);
 		this.initialRange = 200;
 		try {
-			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
-			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(this);
-			this.terminalNodeRegistrationOutboundPort.publishPort();
-			this.terminalNodeCommunicationInboundPort.publishPort();
 			this.terminalNodeRegistrationPlugin = new NodesRegistrationPlugin();
 			this.terminalNodeRegistrationPlugin.setPluginURI(TERMINAL_NODE_REGISTRATION_PLUGIN_URI);
 			this.installPlugin(terminalNodeRegistrationPlugin);
@@ -75,7 +66,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 		super.execute();
 		System.out.println("EXECUTING FROM TERMINAL NODE");
 		Set<ConnectionInfo> connectionInfos = terminalNodeRegistrationPlugin.registerTerminalNode(address,
-				TERMINAL_NODE_REGISTRATION_PLUGIN_URI, initialPosition, initialRange);
+				"SOME URI", initialPosition, initialRange);
 		System.out.println("TERMINAL NODE HAS A TOTAL OF " + connectionInfos.size()  + " ROUTING NODES");
 		
 	}
@@ -94,8 +85,8 @@ public class TerminalNodeComponent extends AbstractComponent {
 	public synchronized void shutdown() throws ComponentShutdownException {
 		// TODO Auto-generated method stub
 		try {
-			terminalNodeRegistrationOutboundPort.unpublishPort();
-			terminalNodeCommunicationInboundPort.unpublishPort();
+		//	terminalNodeRegistrationOutboundPort.unpublishPort();
+			//terminalNodeCommunicationInboundPort.unpublishPort();
 //			for (CommunicationOutBoundPort port : communicationConnections.values())
 //				port.unpublishPort();
 		} catch (Exception e) {
