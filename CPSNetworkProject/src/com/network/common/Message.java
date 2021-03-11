@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import com.network.interfaces.AddressI;
 
-public class Message implements MessageI{
+public class Message implements com.network.interfaces.MessageI{
 	private AddressI address;
 	private Serializable content;
 	private int hops;
@@ -31,8 +31,11 @@ public class Message implements MessageI{
 		return hops > 0;
 	}
 
+
+
 	@Override
-	public void decementHops() {
+	public void decrementHops() {
+		// TODO Auto-generated method stub
 		hops--;
 	}
 

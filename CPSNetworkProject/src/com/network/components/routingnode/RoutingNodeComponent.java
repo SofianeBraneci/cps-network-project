@@ -47,14 +47,14 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	private Map<NodeAddressI, Integer> accessPointsMap;
 
-	private NodeAddressI address, sendingAddressI;
+	private NodeAddressI nodeAddress, sendingAddressI;
 	private PositionI initialPosition;
 	private double initialRange;
 
 	protected RoutingNodeComponent(NodeAddressI address, PositionI initiaPosition, double initialRange)
 			throws Exception {
 		super(1, 0);
-		this.address = address;
+		this.nodeAddress = address;
 		this.initialPosition = initiaPosition;
 		this.initialRange = initialRange;
 
@@ -75,7 +75,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	protected RoutingNodeComponent() throws Exception {
 		super(1, 0);
 
-		this.address = new NodeAddress("some ip");
+		this.nodeAddress = new NodeAddress("some ip");
 		this.initialPosition = new Position(12, 23);
 		this.initialRange = 120;
 		this.routes = new HashMap<>();
@@ -94,14 +94,14 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	@Override
 	public synchronized void execute() throws Exception {
-
+		super.execute();
 		doPortConnection(routingNodeRegistrationOutboundPort.getPortURI(), RegisterComponent.REGISTER_INBOUND_PORT_URI,
 				RegistrationConnector.class.getCanonicalName());
 
-		Set<ConnectionInfo> connectionInfos = routingNodeRegistrationOutboundPort.registerRoutigNode(address,
+		Set<ConnectionInfo> connectionInfos = routingNodeRegistrationOutboundPort.registerRoutigNode(nodeAddress,
 				routingNodeCommunicationInboundPort.getPortURI(), initialPosition, initialRange,
 				routingInboundPort.getPortURI());
-		System.out.println("Routing node connections = " + connectionInfos.size());
+		System.out.println("ROUTING NODE CONNECTIONS = " + connectionInfos.size());
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 			if (connectionInfo.getCommunicationInboudPort().startsWith("TEST")) {
@@ -111,8 +111,8 @@ public class RoutingNodeComponent extends AbstractComponent {
 						connectionInfo.getRoutingInboundPortURI());
 			}
 		}
-		routingNodeRegistrationOutboundPort.unregister(address);
-		super.execute();
+		// routingNodeRegistrationOutboundPort.unregister(nodeAddress);
+
 	}
 
 	@Override
@@ -143,32 +143,32 @@ public class RoutingNodeComponent extends AbstractComponent {
 	}
 
 	void connect(NodeAddressI address, String communicationInboudURI) {
-//		logMessage("FROM Routing NODE, CONNECTION WAS INVOKED !!!!! " + communicationInboudURI);
-//		// create a new communication out bound port
-//		// register it, and do a simple port connection
+		/*
+		 * When it's called, it should connect with the calling node to achieve a peer
+		 * to peer connection
+		 **/
+		
+		System.out.println("FROM ROUTING NODE: CONNECT METHOD IS INVOKED" + address.toString());
+		try {
+			if (communicationConnectionPorts.containsKey(address))
+				return;
 
-//		try {
-//			if (communicationConnectionPorts.containsKey(address))
-//				return;
-//			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
-//			RoutingOutboundPort routingPort = new RoutingOutboundPort(this);
-//			
-//			routingPort.publishPort();
-//			port.publishPort();
-//			
-//			doPortConnection(port.getPortURI(), communicationInboudURI,
-//					CommunicationConnector.class.getCanonicalName());
-//			doPortConnection(routingPort.getPortURI(), communicationInboudURI,
-//					RoutingConnector.class.getCanonicalName());
-//
-//			routingOutboundPorts.put(address, routingPort);
-//			communicationConnectionPorts.put(address, port);
-//		
-//
-//
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
+			// we creat a new out bound port for the new neighbor
+			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
+			port.publishPort();
+
+			doPortConnection(port.getPortURI(), communicationInboudURI,
+					CommunicationConnector.class.getCanonicalName());
+			communicationConnectionPorts.put(address, port);
+			System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE");
+			System.out.println("ROUITN NODE, CURRENT NEIGHBORS ARE:");
+			for (NodeAddressI addressI : communicationConnectionPorts.keySet()) {
+				System.out.println(addressI.toString());
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -187,13 +187,15 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 			doPortConnection(routingOutboundPort.getPortURI(), routingInboudPortURI,
 					RoutingConnector.class.getCanonicalName());
+
 			doPortConnection(port.getPortURI(), routingNodeCommunicationInboundPort.getPortURI(),
 					CommunicationConnector.class.getCanonicalName());
 
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
-			System.out.println("ROUTING NODE A NEW CONNECTION WAS ESTABLISHED !!!");
-			// ajouter update routing
+			System.out
+					.println("ROUTING NODE A NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnectionPorts.size());
+			
 
 			for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
 				routingOutboundPort.updateRouting(entry.getKey(), entry.getValue());
@@ -203,6 +205,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 			RouteInfo info = new RouteInfo(address, 1);
 			routeInfos.add(info);
 			routes.put(address, routeInfos);
+			
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -229,7 +232,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 		// Check if it has a route to message's address and send it via that port, else
 		int N = 3;
 		try {
-			if (m.getAddress().equals(this.address)) {
+			if (m.getAddress().equals(this.nodeAddress)) {
 				System.out.println("MESSAGE ARRIVED TO HIS DESTINATION !");
 				return;
 			}
@@ -246,10 +249,10 @@ public class RoutingNodeComponent extends AbstractComponent {
 					communicationConnectionPorts.get(accessPointAddressI).transmitMessage(m);
 					return;
 				}
-		
+
 			}
-			if(m.getAddress() instanceof NodeAddressI) {
-				
+			if (m.getAddress() instanceof NodeAddressI) {
+
 			}
 
 			int route = hasRouteFor(m.getAddress());
@@ -274,24 +277,27 @@ public class RoutingNodeComponent extends AbstractComponent {
 	}
 
 	int hasRouteFor(AddressI address) {
-
-		/**
-		 * should ask for all neighbors if they have a route for that address
-		 */
 		try {
-			int min = -1;
-			for (Entry<NodeAddressI, CommunicationOutBoundPort> e : communicationConnectionPorts.entrySet()) {
-				int tmp = e.getValue().hasRouteFor(address);
-				if (min == -1 || (tmp >= 0 && tmp < min)) {
-					min = tmp;
-					sendingAddressI = e.getKey();
+			
+			
+			if(communicationConnectionPorts.containsKey(address)) return 1;
+			
+			int min = Integer.MAX_VALUE, current = 0, counter = 0;
+			
+			for(Entry<NodeAddressI, CommunicationOutBoundPort> entry: communicationConnectionPorts.entrySet()) {
+				System.out.println("ROUTING NODE CURRENT ADDRESSE " + entry.getKey().toString());
+				current = entry.getValue().hasRouteFor(address);
+				if(current == -1) counter ++;
+				
+				if(current < min ) {
+					sendingAddressI = entry.getKey();
+					min = current;
 				}
-
 			}
-
-			return min >= 0 ? min + 1 : -1;
-		} catch (Exception e) {
-			e.printStackTrace();
+			
+			return counter == communicationConnectionPorts.size() ? -1 : min;
+			
+		}catch (Exception e) {
 			return -1;
 		}
 	}
@@ -301,6 +307,8 @@ public class RoutingNodeComponent extends AbstractComponent {
 	}
 
 	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
+		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ROUTING");
+		System.out.println(address.toString());
 		if (!this.routes.containsKey(address))
 			this.routes.put(address, routes);
 		// if (this.routes.get(address).size() > routes.size()) this.routes.put(address,
@@ -311,6 +319,8 @@ public class RoutingNodeComponent extends AbstractComponent {
 	}
 
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
+		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ACCESS POINT");
+		System.out.println(address.toString());
 		if (!accessPointsMap.containsKey(address))
 			accessPointsMap.put(address, numberOfHops);
 		if (accessPointsMap.get(address) > numberOfHops)

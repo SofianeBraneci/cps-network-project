@@ -101,7 +101,10 @@ public class RegisterComponent extends AbstractComponent {
 		routinNodesTable.put(new NodeAddress("IPP"),
 				new NodeComponentInformationWrapper("TEST_ROUTING_PORT_URI", new Position(12, 10), "fff"));
 
-		System.err.println("Excuted");
+		System.out.println("Excuted");
+		System.out.println("TOTAL TEST ENTRIES IN THE ACCESS POINT TABLE IS : " + accessPointsNodesTable.size());
+		System.out.println("TOTAL TEST ENTRIES IN THE ROUTING NODES TABLE IS : " + routinNodesTable.size());
+
 
 	}
 
@@ -112,7 +115,7 @@ public class RegisterComponent extends AbstractComponent {
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		terminalNodesTable.put(address,
 				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
-		System.err.println("current terminal nodes table size " + terminalNodesTable.size());
+		System.out.println("current terminal nodes table size " + terminalNodesTable.size());
 		return neighbores;
 	}
 
@@ -123,7 +126,7 @@ public class RegisterComponent extends AbstractComponent {
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
 		accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
 				initialPosition, routingInboundPortURI));
-		System.err.println("current access points  table size " + accessPointsNodesTable.size());
+		System.out.println("current access points  table size " + accessPointsNodesTable.size());
 		return neighbores;
 	}
 
@@ -133,7 +136,7 @@ public class RegisterComponent extends AbstractComponent {
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
 		routinNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition,
 				routingInboundPortURI));
-		System.err.println("current routing table size " + routinNodesTable.size());
+		System.out.println("current routing table size " + routinNodesTable.size());
 
 		return neighbores;
 	}

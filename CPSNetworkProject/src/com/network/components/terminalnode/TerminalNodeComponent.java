@@ -2,8 +2,8 @@ package com.network.components.terminalnode;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
@@ -89,8 +89,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 			doPortConnection(port.getPortURI(), communicationInboudURI,
 					CommunicationConnector.class.getCanonicalName());
+			//
 			communicationConnections.put(address, port);
-			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED !!!");
+			//port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
+			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnections.size());
 		} catch (Exception e) {
 
 			// TODO Auto-generated catch block
@@ -108,55 +110,62 @@ public class TerminalNodeComponent extends AbstractComponent {
 		// Check if it has a route to message's address and send it via that port, else
 		int N = 3;
 		try {
-			if(m.getAddress().equals(this.address)) {
+			if (m.getAddress().equals(this.address)) {
 				System.out.println("MESSAGE ARRIVED TO HIS DESTINATION !");
 				return;
 			}
-			if(! m.stillAlive()) {
+			if (!m.stillAlive()) {
 				System.out.println("MESSAGE DIED AND HAS BEEN DESTRUCTED!");
 				return;
 			}
 			m.decrementHops();
 			int route = hasRouteFor(m.getAddress());
-			if(route != -1) {
+			System.out.println(route + "gdfgdgd");
+			if (route != -1) {
 				communicationConnections.get(sendingAddressI).transmitMessage(m);
 			}
 			// inondation
 			else {
 				int n = 0;
-				for(CommunicationOutBoundPort cobp : communicationConnections.values()) {
-					if(n == N)
+				for (CommunicationOutBoundPort cobp : communicationConnections.values()) {
+					if (n == N)
 						break;
 					n++;
 					cobp.transmitMessage(m);
 				}
 			}
-		}catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	// no routing capability
 	int hasRouteFor(AddressI address) {
-		/**
-		 * should ask for all  neighbors if they have a route for that address
-		 * */
+		
+		// for(NodeAddressI add: communicationConnections.keySet())
+		// System.out.println(add.toString());
+		if(this.address.equals(address)) return 0;
+		int min = 9000;
+		int counter = 0;
+		int current;
 		try {
-			int min = -1;
-			for(Entry<NodeAddressI, CommunicationOutBoundPort> e: communicationConnections.entrySet()) {
-				int tmp = e.getValue().hasRouteFor(address);
-				if(min == -1 || (tmp >= 0 && tmp < min)) {
-					min = tmp;
-					sendingAddressI = e.getKey();
+			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnections.entrySet()) {
+				System.out.println("TERMINAL CURRENT ADDRESSE " + entry.getKey());
+				current = entry.getValue().hasRouteFor(address);
+				if(current == -1) counter++;
+				if (current < min) {
+					sendingAddressI = entry.getKey();
+					min = current;
+
 				}
-				
 			}
 			
-			return min >= 0 ? min : -1;
-		}catch(Exception e) {
-			e.printStackTrace();
+			return counter ==  communicationConnections.size() ? -1 : min + 1;
+		} catch (Exception e) {
+			// TODO: handle exception
 			return -1;
 		}
+
 	}
 
 	void ping() {
@@ -167,9 +176,11 @@ public class TerminalNodeComponent extends AbstractComponent {
 	public synchronized void execute() throws Exception {
 
 		// do a port connection with the register
+		// registration work perfectly
 		doPortConnection(terminalNodeRegistrationOutboundPort.getPortURI(), RegisterComponent.REGISTER_INBOUND_PORT_URI,
 				RegistrationConnector.class.getCanonicalName());
-
+		// just to wait for the routing nodes to register properly
+		Thread.sleep(3000L);
 		// register the node and get the neighbors
 		Set<ConnectionInfo> connectionInfos = terminalNodeRegistrationOutboundPort.registerTerminalNode(address,
 				terminalNodeCommunicationInboundPort.getPortURI(), initialPosition, initialRange);
@@ -177,13 +188,15 @@ public class TerminalNodeComponent extends AbstractComponent {
 		// connect with them
 		System.out.println("TERMINAL NODE connection size = " + connectionInfos.size());
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-			if (connectionInfo.getCommunicationInboudPort().startsWith("TEST"))
-				continue;
-			else {
-				this.connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
+			if (!connectionInfo.getCommunicationInboudPort().startsWith("TEST")) {
+
+				connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
 			}
 		}
-		terminalNodeRegistrationOutboundPort.unregister(address);
+
+		// terminalNodeRegistrationOutboundPort.unregister(address);
+		int route = hasRouteFor(new NodeAddress("192.168.25.5"));
+		System.out.println("FROM HAS" + route);
 		super.execute();
 
 	}
