@@ -18,7 +18,6 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private String pluginURI;
 
 	public RegisterServiceInboundPortPlugin(ComponentI owner, String pluginURI) throws Exception {
 		// TODO Auto-generated constructor stub
@@ -29,12 +28,9 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 	@Override
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
-		// TODO Auto-generated method stub
-		return getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ConnectionInfo>>(this.pluginURI) {
+		return getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ConnectionInfo>>(this.getPluginURI()) {
 			@Override
 			public Set<ConnectionInfo> call() throws Exception {
-				// TODO Auto-generated method stub
-				System.err.println("IN");
 				return ((RegisterRegistrationPlugin) this.getServiceProviderReference()).registerTerminalNode(address,
 						communicationInboundPortURI, initialPosition, initialRange);
 			}
@@ -45,11 +41,10 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 	@Override
 	public Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
-		return getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ConnectionInfo>>(this.pluginURI) {
+		return getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ConnectionInfo>>(this.getPluginURI()) {
 			@Override
 			public Set<ConnectionInfo> call() throws Exception {
 				// TODO Auto-generated method stub
-				System.err.println("IN");
 				return ((RegisterRegistrationPlugin) this.getServiceProviderReference()).registerAccessPoint(address,
 						communicationInboundPortURI, initialPosition, initialRange, routingInboundPortURI);
 
@@ -62,12 +57,11 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 	public Set<ConnectionInfo> registerRoutigNode(NodeAddressI address, String commnicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
 		// TODO Auto-generated method stub
-		return getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ConnectionInfo>>(this.pluginURI) {
+		return getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ConnectionInfo>>(this.getPluginURI()) {
 			@Override
 			
 			public Set<ConnectionInfo> call() throws Exception {
 				// TODO Auto-generated method stub
-				System.err.println("IN");
 				return ((RegisterRegistrationPlugin) this.getServiceProviderReference()).registerRoutigNode(address, commnicationInboundPortURI, initialPosition, initialRange, routingInboundPortURI);
 			}
 			
@@ -76,7 +70,7 @@ public class RegisterServiceInboundPortPlugin extends AbstractInboundPort implem
 
 	@Override
 	public void unregister(NodeAddressI address) throws Exception {
-		 getOwner().handleRequest(new AbstractComponent.AbstractService<Void>(this.pluginURI) {
+		 getOwner().handleRequest(new AbstractComponent.AbstractService<Void>(this.getPluginURI()) {
 			@Override
 			public Void call() throws Exception {
 				// TODO Auto-generated method stub

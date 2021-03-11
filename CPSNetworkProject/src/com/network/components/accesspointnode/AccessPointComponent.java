@@ -12,7 +12,7 @@ import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
 import com.network.common.RouteInfo;
-import com.network.common.RoutingConnector;
+import com.network.connectors.RoutingConnector;
 import com.network.common.RoutingOutboundPort;
 import com.network.components.register.RegisterComponent;
 import com.network.connectors.CommunicationConnector;

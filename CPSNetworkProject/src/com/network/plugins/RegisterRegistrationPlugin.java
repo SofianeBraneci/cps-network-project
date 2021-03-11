@@ -8,8 +8,6 @@ import com.network.interfaces.PositionI;
 import com.network.interfaces.RegistrationCI;
 import com.network.withplugin.components.RegisterComponent;
 import com.network.withplugin.ports.RegisterServiceInboundPortPlugin;
-
-import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.AbstractPlugin;
 import fr.sorbonne_u.components.ComponentI;
 
@@ -27,27 +25,25 @@ public class RegisterRegistrationPlugin extends AbstractPlugin {
 		super();
 	}
 
-	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
-			PositionI initialPosition, double initialRange) {
-		System.err.println("sssssss");
+			PositionI initialPosition, double initialRange) throws Exception {
 		return ((RegisterComponent) getOwner()).registerTerminalNode(address, communicationInboundPortURI,
 				initialPosition, initialRange);
 	}
 
 	public Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
-			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
+			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
 		return ((RegisterComponent) getOwner()).registerAccessPoint(address, communicationInboundPortURI,
 				initialPosition, initialRange, routingInboundPortURI);
 	}
 
 	public Set<ConnectionInfo> registerRoutigNode(NodeAddressI address, String communicationInboundPortURI,
-			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
+			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
 		return ((RegisterComponent) getOwner()).registerRoutigNode(address, communicationInboundPortURI,
 				initialPosition, initialRange, routingInboundPortURI);
 	}
 
-	public void unregister(NodeAddressI address) {
+	public void unregister(NodeAddressI address) throws Exception {
 		((RegisterComponent) getOwner()).unregister(address);
 
 	}
@@ -56,16 +52,13 @@ public class RegisterRegistrationPlugin extends AbstractPlugin {
 	
 	@Override
 	public void installOn(ComponentI owner) throws Exception {
-		// TODO Auto-generated method stub
 		super.installOn(owner);
 	}
 
 	@Override
 	public void initialise() throws Exception {
 		super.initialise();
-		System.out.println("REGISTRATION PLUGIN IS LAUNCHED !");
 		addOfferedInterface(RegistrationCI.class);
-		System.err.println("REGISTRATION CI IS ADDED AS AN OFFERED INTERFACE FOR THE REGISTER COMPONENT");
 
 		registerServiceInboundPortPlugin = new RegisterServiceInboundPortPlugin(this.getOwner(), this.getPluginURI());
 		registerServiceInboundPortPlugin.publishPort();
@@ -80,8 +73,6 @@ public class RegisterRegistrationPlugin extends AbstractPlugin {
 
 	@Override
 	public void uninstall() throws Exception {
-	
-		
 		super.uninstall();
 
 	}

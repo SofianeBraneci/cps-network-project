@@ -19,15 +19,20 @@ public class CVM extends AbstractCVM{
 
 		
 		AbstractComponent.createComponent(RegisterComponent.class.getCanonicalName(), new Object[]{});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+
 		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
-		
+		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+	
 		
 		super.deploy();
 	}
 
 	public static void main(String[] args) {
 		try{CVM c = new CVM();
-		c.startStandardLifeCycle(50000L);
+		c.startStandardLifeCycle(5000L);
 		System.exit(0);
 	}catch (Exception e) {
 		// TODO: handle exception

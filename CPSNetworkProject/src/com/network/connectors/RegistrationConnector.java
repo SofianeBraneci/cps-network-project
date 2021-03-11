@@ -19,7 +19,6 @@ public class RegistrationConnector extends AbstractConnector implements Registra
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
 		// TODO Auto-generated method stub
-		System.out.print("HEERRREE");
 		return ((RegistrationCI)this.offering).registerTerminalNode(address, communicationInboundPortURI, initialPosition, initialRange);
 	}
 

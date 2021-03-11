@@ -26,7 +26,6 @@ public class RegistrationOutboundPort  extends AbstractOutboundPort implements R
 	@Override
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
-		System.err.println("HERE");
 		return ((RegistrationCI)getConnector()).registerTerminalNode(address, communicationInboundPortURI, initialPosition, initialRange);
 	}
 

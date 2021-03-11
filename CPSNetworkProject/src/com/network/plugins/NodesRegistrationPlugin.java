@@ -28,7 +28,6 @@ public class NodesRegistrationPlugin extends AbstractPlugin {
 	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
-		System.err.println("CALLED");
 		return registrationOutboundPort.registerTerminalNode(address, communicationInboundPortURI, initialPosition,
 				initialRange);
 	}
@@ -63,15 +62,13 @@ public class NodesRegistrationPlugin extends AbstractPlugin {
 	@Override
 	public void initialise() throws Exception {
 		super.initialise();
-		System.out.println("A NODE REGISTRATION PLUGIN IS LAUNCHED");
+		System.err.println("NODE REGISTRATION PLUGIN IS LAUNCHED");
 		addRequiredInterface(RegistrationCI.class);
 		registrationOutboundPort = new RegistrationOutboundPort(getOwner());
 		registrationOutboundPort.publishPort();
 		
-		System.err.println("REGISTRATION CI IS ADDED AS A REQUIRED INTERFACE FOR THE CURRENT COMPONENT");
 		getOwner().doPortConnection(registrationOutboundPort.getPortURI(),
 				RegisterRegistrationPlugin.REGISTER_INBOUND_PORT_URI, RegistrationConnector.class.getCanonicalName());
-		System.out.println("A NODE IS CONNECTED TO THE REGISTER!");
 		
 	}
 	

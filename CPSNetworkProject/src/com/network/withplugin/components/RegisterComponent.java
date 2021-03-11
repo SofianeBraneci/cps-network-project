@@ -15,7 +15,6 @@ import com.network.interfaces.PositionI;
 import com.network.plugins.RegisterRegistrationPlugin;
 
 import fr.sorbonne_u.components.AbstractComponent;
-import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 
 public class RegisterComponent extends AbstractComponent {
 
@@ -46,7 +45,6 @@ public class RegisterComponent extends AbstractComponent {
 			this.installPlugin(registrationPlugin);
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -90,7 +88,6 @@ public class RegisterComponent extends AbstractComponent {
 	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 		public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 				PositionI initialPosition, double initialRange) {
-			System.err.println("RECEIVED");
 			Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 1);
 			neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 			terminalNodesTable.put(address,
@@ -132,8 +129,6 @@ public class RegisterComponent extends AbstractComponent {
 		@Override
 		public synchronized void execute() throws Exception {
 			super.execute();
-//			terminalNodesTable.put(new NodeAddress("IP Address"),
-//					new NodeComponentInformationWrapper("sd", new Position(12, 3)));
 			accessPointsNodesTable.put(new NodeAddress("IP"),
 					new NodeComponentInformationWrapper("TEST_ACCESSPOINT_PORT_URI", new Position(12, 12), "fdfd"));
 			routinNodesTable.put(new NodeAddress("IPP"),
@@ -144,7 +139,6 @@ public class RegisterComponent extends AbstractComponent {
 		}
 	@Override
 	public synchronized void finalise() throws Exception {
-		// TODO Auto-generated method stub
 		super.finalise();
 
 	}
