@@ -147,7 +147,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 		 * When it's called, it should connect with the calling node to achieve a peer
 		 * to peer connection
 		 **/
-		
+
 		System.out.println("FROM ROUTING NODE: CONNECT METHOD IS INVOKED" + address.toString());
 		try {
 			if (communicationConnectionPorts.containsKey(address))
@@ -195,7 +195,6 @@ public class RoutingNodeComponent extends AbstractComponent {
 			routingOutboundPorts.put(address, routingOutboundPort);
 			System.out
 					.println("ROUTING NODE A NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnectionPorts.size());
-			
 
 			for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
 				routingOutboundPort.updateRouting(entry.getKey(), entry.getValue());
@@ -205,7 +204,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 			RouteInfo info = new RouteInfo(address, 1);
 			routeInfos.add(info);
 			routes.put(address, routeInfos);
-			
+
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -226,80 +225,52 @@ public class RoutingNodeComponent extends AbstractComponent {
 	}
 
 	void transmitMessage(MessageI m) {
-		// Check if it has a route to message's address and send it via that port, else
-		// kill it
-
-		// Check if it has a route to message's address and send it via that port, else
 		int N = 3;
+		System.out.println("FROM TRANSMIT MESSAGE IN ROUTING NODE");
+		if( ! m.stillAlive()) {
+			System.out.println("Message is dead");
+			return;
+		}
+		
+		if (nodeAddress.equals(m.getAddress())) {
+			System.out.println("MESSAGE IS RECEIVED IN ROUTING NODE");
+			return;
+		}
+
+		CommunicationOutBoundPort sendingPort = communicationConnectionPorts.get(m.getAddress());
+		m.decrementHops();
 		try {
-			if (m.getAddress().equals(this.nodeAddress)) {
-				System.out.println("MESSAGE ARRIVED TO HIS DESTINATION !");
-				return;
-			}
-			if (!m.stillAlive()) {
-				System.out.println("MESSAGE DIED AND HAS BEEN DESTRUCTED!");
-				m = null;
-				return;
-			}
-
-			m.decrementHops();
-			if (m.getAddress() instanceof NetworkAddressI) {
-				NodeAddressI accessPointAddressI = getClosestAccessPoint();
-				if (accessPointAddressI != null) {
-					communicationConnectionPorts.get(accessPointAddressI).transmitMessage(m);
-					return;
+			if (sendingPort != null) {
+				System.out.println("ROUTING NODE HAS AN ENTRY FOR THE CURRENT ADDRESS");
+				if (m.getAddress() instanceof NetworkAddressI) {
+					NodeAddressI closestAccessPoint = getClosestAccessPoint();
+					communicationConnectionPorts.get(closestAccessPoint).transmitMessage(m);
+				} else {
+					sendingPort.transmitMessage(m);
 				}
-
-			}
-			if (m.getAddress() instanceof NodeAddressI) {
-
-			}
-
-			int route = hasRouteFor(m.getAddress());
-			if (route != -1) {
-				communicationConnectionPorts.get(sendingAddressI).transmitMessage(m);
-				return;
-			}
-			// inondation
-			else {
-				int n = 0;
-				for (CommunicationOutBoundPort cobp : communicationConnectionPorts.values()) {
-					if (n == N)
-						break;
-					n++;
-					cobp.transmitMessage(m);
+			} else {
+				System.out.println("Inondation");
+				for(CommunicationOutBoundPort port: communicationConnectionPorts.values()) {
+					if(N == 0) break;
+					port.transmitMessage(m);
+					N--;
 				}
 			}
+
 		} catch (Exception e) {
-			e.printStackTrace();
+			// TODO: handle exception
 		}
 
 	}
 
 	int hasRouteFor(AddressI address) {
-		try {
-			
-			
-			if(communicationConnectionPorts.containsKey(address)) return 1;
-			
-			int min = Integer.MAX_VALUE, current = 0, counter = 0;
-			
-			for(Entry<NodeAddressI, CommunicationOutBoundPort> entry: communicationConnectionPorts.entrySet()) {
-				System.out.println("ROUTING NODE CURRENT ADDRESSE " + entry.getKey().toString());
-				current = entry.getValue().hasRouteFor(address);
-				if(current == -1) counter ++;
-				
-				if(current < min ) {
-					sendingAddressI = entry.getKey();
-					min = current;
-				}
-			}
-			
-			return counter == communicationConnectionPorts.size() ? -1 : min;
-			
-		}catch (Exception e) {
+
+		System.err.println(communicationConnectionPorts.containsKey(address));
+		if (communicationConnectionPorts.containsKey(address))
+			return 1;
+		else
 			return -1;
-		}
+
 	}
 
 	void ping() {

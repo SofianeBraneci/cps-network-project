@@ -7,6 +7,8 @@ import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
+import com.network.common.Message;
+import com.network.common.NetworkAddress;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
@@ -91,7 +93,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 					CommunicationConnector.class.getCanonicalName());
 			//
 			communicationConnections.put(address, port);
-			//port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
+			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
 			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnections.size());
 		} catch (Exception e) {
 
@@ -110,30 +112,32 @@ public class TerminalNodeComponent extends AbstractComponent {
 		// Check if it has a route to message's address and send it via that port, else
 		int N = 3;
 		try {
-			if (m.getAddress().equals(this.address)) {
-				System.out.println("MESSAGE ARRIVED TO HIS DESTINATION !");
+			if(this.address.equals(m.getAddress())) {
+				System.out.println("FROM TERMINAL NODE: A MESSAGE IS RECEIVED");
 				return;
 			}
-			if (!m.stillAlive()) {
-				System.out.println("MESSAGE DIED AND HAS BEEN DESTRUCTED!");
-				return;
-			}
-			m.decrementHops();
+			
+			// check if a neighbor has a roue
 			int route = hasRouteFor(m.getAddress());
-			System.out.println(route + "gdfgdgd");
-			if (route != -1) {
+			
+			if(route != -1) {
+				System.out.println("ROUTE LENGTH IS " + route);
+				System.out.println("THE SENDING ADDRESS IS " + sendingAddressI);
 				communicationConnections.get(sendingAddressI).transmitMessage(m);
+		
 			}
-			// inondation
 			else {
-				int n = 0;
-				for (CommunicationOutBoundPort cobp : communicationConnections.values()) {
-					if (n == N)
-						break;
-					n++;
-					cobp.transmitMessage(m);
+				System.out.println("ALL NEIGHBORS RESPONDED WITH A -1, PROCEED WITH FLODING");
+				for(CommunicationOutBoundPort port: communicationConnections.values()) {
+					if(N == 0 ) break;
+					port.transmitMessage(m);
+					N--;
 				}
+				return;
 			}
+			// proceed by flooding the network
+					
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -149,9 +153,11 @@ public class TerminalNodeComponent extends AbstractComponent {
 		int counter = 0;
 		int current;
 		try {
+			
 			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnections.entrySet()) {
 				System.out.println("TERMINAL CURRENT ADDRESSE " + entry.getKey());
 				current = entry.getValue().hasRouteFor(address);
+				System.out.println(current);
 				if(current == -1) counter++;
 				if (current < min) {
 					sendingAddressI = entry.getKey();
@@ -195,8 +201,8 @@ public class TerminalNodeComponent extends AbstractComponent {
 		}
 
 		// terminalNodeRegistrationOutboundPort.unregister(address);
-		int route = hasRouteFor(new NodeAddress("192.168.25.5"));
-		System.out.println("FROM HAS" + route);
+		Message message = new Message(new NetworkAddress("192.168.28.5"), "Hello", 2 );
+		transmitMessage(message);
 		super.execute();
 
 	}

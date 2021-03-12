@@ -116,7 +116,7 @@ public class AccessPointComponent extends AbstractComponent {
 			}
 
 		}
-		//registrationOutboundPort.unregister(address);
+		// registrationOutboundPort.unregister(address);
 
 		super.execute();
 	}
@@ -147,6 +147,7 @@ public class AccessPointComponent extends AbstractComponent {
 			doPortDisconnection(routing.getPortURI());
 		super.finalise();
 	}
+
 	void connect(NodeAddressI address, String communicationInboudURI) {
 		/*
 		 * When it's called, it should connect with the calling node to achieve a peer
@@ -165,10 +166,6 @@ public class AccessPointComponent extends AbstractComponent {
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnectionPorts.put(address, port);
 			System.out.println("ACCESS POINT: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE");
-			System.out.println("ACCESS POINT, CURRENT NEIGHBORS ARE:");
-			for (NodeAddressI addressI : communicationConnectionPorts.keySet()) {
-				System.out.println(addressI.toString());
-			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -198,20 +195,18 @@ public class AccessPointComponent extends AbstractComponent {
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
 			System.out
-					.println("ACCESS POINT  NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnectionPorts.size());
-			
+					.println("ACCESS POINT  NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE !!!" + communicationConnectionPorts.size());
 
 			for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
 				routingOutboundPort.updateRouting(entry.getKey(), entry.getValue());
 				routingOutboundPort.updateAccessPoint(this.address, 1);
 			}
-			
+
 			Set<RouteInfo> routeInfos = new HashSet<>();
 			RouteInfo info = new RouteInfo(address, 1);
 			routeInfos.add(info);
 			routes.put(address, routeInfos);
-			//port.connectRouting(nodeAddress, routingNodeCommunicationInboundPort.getPortURI(), routingInboundPort.getPortURI());
-			
+
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -236,20 +231,19 @@ public class AccessPointComponent extends AbstractComponent {
 
 			m.decrementHops();
 			if (m.getAddress() instanceof NetworkAddressI) {
-					System.err.println("A MESSAGE RECEIVED FROM A NETWORK ADDRESS");
-					return;
-				
-		
+				System.err.println("A MESSAGE RECEIVED FROM A NETWORK ADDRESS");
+				return;
+
 			}
 
-
-			int route = hasRouteFor(m.getAddress());
-			if (route != -1) {
-				communicationConnectionPorts.get(sendingAddressI).transmitMessage(m);
-				return;
+			CommunicationOutBoundPort sendingPort = communicationConnectionPorts.get(m.getAddress());
+			if (sendingPort != null) {
+				System.out.println("ACCESS POINT HAS  ROUTE FOR THE CURREN NODE ADDRESS");
+				sendingPort.transmitMessage(m);
 			}
 			// inondation
 			else {
+				System.out.println("ACCESS POINT NO ENTRY FOR THE CURRENT ADDRESS");
 				int n = 0;
 				for (CommunicationOutBoundPort cobp : communicationConnectionPorts.values()) {
 					if (n == N)
@@ -287,21 +281,26 @@ public class AccessPointComponent extends AbstractComponent {
 		}
 	}
 
-
 	void ping() {
 
 	}
 
 	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
-		if (this.address.equals(address)) return;
-		if(! this.routes.containsKey(address)) this.routes.put(address, routes);
-		if (this.routes.get(address).size() > routes.size()) this.routes.put(address, routes);
+		if (this.address.equals(address))
+			return;
+		if (!this.routes.containsKey(address))
+			this.routes.put(address, routes);
+		if (this.routes.get(address).size() > routes.size())
+			this.routes.put(address, routes);
 	}
 
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
-		if (this.address.equals(address)) return;
-		if(!accessPointsMap.containsKey(address)) accessPointsMap.put(address, numberOfHops);
-		if(accessPointsMap.get(address) > numberOfHops) accessPointsMap.put(address, numberOfHops);
+		if (this.address.equals(address))
+			return;
+		if (!accessPointsMap.containsKey(address))
+			accessPointsMap.put(address, numberOfHops);
+		if (accessPointsMap.get(address) > numberOfHops)
+			accessPointsMap.put(address, numberOfHops);
 	}
 
 }
