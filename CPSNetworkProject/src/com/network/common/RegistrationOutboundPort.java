@@ -9,20 +9,35 @@ import com.network.interfaces.RegistrationCI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 
+/**
+ * 
+ * Class for registration outbound ports
+ * 
+ * @author Softwarkers
+ * 
+ */
 public class RegistrationOutboundPort  extends AbstractOutboundPort implements RegistrationCI{
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
+	/**
+	 * create and initialize registration outbound ports.
+	 * @param owner component that owns this port.
+	 * @throws Exception
+	 */
 	public RegistrationOutboundPort(ComponentI owner) throws Exception{
 		super(RegistrationCI.class, owner);
 	}
 
+	/**
+	 * create and initialize registration outbound ports.
+	 * @param uri unique identifier of the port.
+	 * @param owner component that owns this port.
+	 * @throws Exception
+	 */
 	public RegistrationOutboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, RegistrationCI.class,  owner);
 	}
+	
 	@Override
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
@@ -43,7 +58,6 @@ public class RegistrationOutboundPort  extends AbstractOutboundPort implements R
 
 	@Override
 	public void unregister(NodeAddressI address) throws Exception {
-		// TODO Auto-generated method stub
 		((RegistrationCI)getConnector()).unregister(address);
 		
 	}

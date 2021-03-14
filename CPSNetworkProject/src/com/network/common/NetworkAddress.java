@@ -3,8 +3,18 @@ package com.network.common;
 import com.network.interfaces.AddressI;
 import com.network.interfaces.NetworkAddressI;
 
+/**
+ * 
+ * Class for network addresses
+ * 
+ * @author Softwarkers
+ *
+ */
 public class NetworkAddress extends AbstractAddress implements NetworkAddressI {
-
+	/**
+	 * Initialize a network address
+	 * @param ip IP address
+	 */
 	public NetworkAddress(String ip) {
 		super(ip);
 	}
@@ -16,13 +26,11 @@ public class NetworkAddress extends AbstractAddress implements NetworkAddressI {
 
 	@Override
 	public int hashCode() {
-		// TODO Auto-generated method stub
 		return getIp().hashCode();
 	}
 
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		return getIp();
 	}
 

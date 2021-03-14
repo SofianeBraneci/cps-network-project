@@ -8,19 +8,31 @@ import com.network.interfaces.NodeAddressI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 
-public class AccessPointCommunicationInbountPort extends AbstractInboundPort implements CommunicationCI{
+/**
+ * Class for access point communication inbound ports
+ * 
+ * @author Softwarkers
+ *
+ */
+public class AccessPointCommunicationInboundPort extends AbstractInboundPort implements CommunicationCI{
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
-	public AccessPointCommunicationInbountPort(ComponentI owner) throws Exception {
+	/**
+	 * create and initialize access point communication inbound ports.
+	 * @param owner component that owns this port.
+	 * @throws Exception
+	 */
+	public AccessPointCommunicationInboundPort(ComponentI owner) throws Exception {
 		super(CommunicationCI.class, owner);
 	}
-
-	public AccessPointCommunicationInbountPort(String uri, ComponentI owner) throws Exception {
-		// TODO Auto-generated constructor stub
+	/**
+	 * create and initialize access point communication inbound ports.
+	 * @param uri unique identifier of the port.
+	 * @param owner component that owns this port.
+	 * @throws Exception
+	 */
+	public AccessPointCommunicationInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri,CommunicationCI.class ,owner);
 	}
 	
@@ -31,7 +43,6 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 			((AccessPointComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
-
 	}
 
 	@Override
@@ -42,7 +53,6 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 			((AccessPointComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
-
 	}
 
 	@Override
@@ -65,8 +75,5 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 			((AccessPointComponent) c).ping();
 			return null;
 		});
-
 	}
-
-
 }

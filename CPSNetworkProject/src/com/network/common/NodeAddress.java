@@ -3,11 +3,20 @@ package com.network.common;
 import com.network.interfaces.AddressI;
 import com.network.interfaces.NetworkAddressI;
 import com.network.interfaces.NodeAddressI;
-
+/**
+ * 
+ * Class for node addresses
+ * 
+ * @author Softwarkers
+ *
+ */
 public class NodeAddress extends AbstractAddress implements NodeAddressI {
 
+	/**
+	 * Initialise a node address
+	 * @param ip IP address
+	 */
 	public NodeAddress(String ip) {
-		// TODO Auto-generated constructor stub
 		super(ip);
 	}
 
@@ -18,12 +27,11 @@ public class NodeAddress extends AbstractAddress implements NodeAddressI {
 
 	@Override
 	public int hashCode() {
-		// TODO Auto-generated method stub
 		return getIp().hashCode();
 	}
+	
 	@Override
 	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
 		if(obj instanceof NodeAddress) {
 			NodeAddressI o = (NodeAddressI) obj;
 			return this.equals(o);
@@ -37,7 +45,6 @@ public class NodeAddress extends AbstractAddress implements NodeAddressI {
 
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		return getIp();
 	}
 
