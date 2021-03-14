@@ -9,22 +9,33 @@ import com.network.interfaces.RoutingCI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 
-public class RoutingNodeRoutingInboundPort extends AbstractInboundPort implements RoutingCI{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+/**
+ * Class for routing nodes routing inbound ports
+ * @author Softwarkers
+ */
 
+public class RoutingNodeRoutingInboundPort extends AbstractInboundPort implements RoutingCI{
+
+	private static final long serialVersionUID = 1L;
+	/**
+	 * create and initialize routing inbound ports for routing nodes.
+	 * @param owner access point that owns this port
+	 * @exception Exception
+	 */
 	public RoutingNodeRoutingInboundPort(ComponentI owner) throws Exception{
 		super(RoutingCI.class, owner);
 	}
 	
+	/**
+	 * create and initialize routing inbound ports for routing nodes.
+	 * @param uri unique identifier of the port.
+	 * @param owner access point that owns this port
+	 * @exception Exception
+	 */
 	public RoutingNodeRoutingInboundPort(String uri, ComponentI owner)
 			throws Exception {
 		super(uri, RoutingCI.class, owner);
 	}
-
-
 	
 	@Override
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) throws Exception {
@@ -32,7 +43,6 @@ public class RoutingNodeRoutingInboundPort extends AbstractInboundPort implement
 			((RoutingNodeComponent)c).updateRouting(address, routes);
 			return null;
 		});
-		
 	}
 
 	@Override
@@ -41,9 +51,5 @@ public class RoutingNodeRoutingInboundPort extends AbstractInboundPort implement
 			((RoutingNodeComponent)c).updateAccessPoint(neighbour, numberOfHops);
 			return null;
 		});
-		
 	}
-
-
-
 }

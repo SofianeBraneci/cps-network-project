@@ -8,7 +8,6 @@ import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
-import com.network.common.NetworkAddress;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
@@ -31,28 +30,45 @@ import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
-
+/**
+ * Class for routing node components
+ * @author Softwarkers
+ *
+ */
 @RequiredInterfaces(required = { RegistrationCI.class, CommunicationCI.class, RoutingCI.class })
 @OfferedInterfaces(offered = { CommunicationCI.class, RoutingCI.class })
 public class RoutingNodeComponent extends AbstractComponent {
-
+	/** the routing node communication inbound port*/
 	private RoutingNodeCommunicationInboundPort routingNodeCommunicationInboundPort;
+	/** the routing node registration outbound port*/
 	private RegistrationOutboundPort routingNodeRegistrationOutboundPort;
+	/** the routing node routing inbound port*/
 	private RoutingNodeRoutingInboundPort routingInboundPort;
-
+	
+	/** neighbor's ports of the current node */
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnectionPorts;
-
+	/** neighbor's routing ports of the current node */
 	private Map<NodeAddressI, RoutingOutboundPort> routingOutboundPorts;
-
+	/** access points neighbor's route info of the current node */
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
-
+	/** Number of hops between the routing node and his access points neighbors*/
 	private Map<NodeAddressI, Integer> accessPointsMap;
-
-	private NodeAddressI nodeAddress, sendingAddressI;
+	/** the routing node address */
+	private NodeAddressI nodeAddress;
+	/** the routing node initial position */
 	private PositionI initialPosition;
+	/** the routing node initial range */
 	private double initialRange;
+	/** the routing node executor index */
 	private int executorIndex;
 
+	/**
+	 * create and initialize routing node
+	 * @param address the routing node address
+	 * @param initialPosition the routing node initial position
+	 * @param initialRange the routing node initial range
+	 * @throws Exception
+	 */
 	protected RoutingNodeComponent(NodeAddressI address, PositionI initiaPosition, double initialRange)
 			throws Exception {
 		super(1, 0);
@@ -73,9 +89,12 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.routingNodeRegistrationOutboundPort.publishPort();
 		this.routingInboundPort.publishPort();
 		this.executorIndex = createNewExecutorService("ROUTING NODE EXECUTOR SERVICE", 1, false);
-
 	}
-
+	
+	/**
+	 * create and initialize a routing node with predifined information
+	 * @throws Exception
+	 */
 	protected RoutingNodeComponent() throws Exception {
 		super(1, 0);
 
@@ -128,22 +147,26 @@ public class RoutingNodeComponent extends AbstractComponent {
 					
 					Thread.sleep(200L);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 		});
+		
 		// uncomment this to test unregister
-//		routingNodeRegistrationOutboundPort.unregister(nodeAddress);
-//		terminalNodeRegistrationOutboundPort.unregister(address);
-//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
-//		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
-//		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
-//		transmitMessage(message);
-
+/*
+		routingNodeRegistrationOutboundPort.unregister(nodeAddress);
+		terminalNodeRegistrationOutboundPort.unregister(address);
+*/
+		
+		//uncomment this to test message sending
+/*
+		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
+		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
+		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
+		transmitMessage(message);
+*/
 	}
 
 	@Override
@@ -173,32 +196,41 @@ public class RoutingNodeComponent extends AbstractComponent {
 		super.finalise();
 	}
 
-	void connect(NodeAddressI address, String communicationInboudURI) {
-		/*
-		 * When it's called, it should connect with the calling node to achieve a peer
-		 * to peer connection
-		 **/
+
+	/**
+	 * Connect the actual routing node with a terminal node to achieve a peer to peer connection
+	 * @param address terminal node to connect with address
+	 * @param communicationInboundPortURI terminal node to connect with communication inbound port uri
+	 */
+	void connect(NodeAddressI address, String communicationInboundURI) {
+
 
 		System.out.println("FROM ROUTING NODE: CONNECT METHOD IS INVOKED" + address.toString());
 		try {
 			if (communicationConnectionPorts.containsKey(address))
 				return;
 
-			// we creat a new out bound port for the new neighbor
+			// we create a new outbound port for the new neighbor
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
 
-			doPortConnection(port.getPortURI(), communicationInboudURI,
+			doPortConnection(port.getPortURI(), communicationInboundURI,
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnectionPorts.put(address, port);
-			
+			System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE " + address);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 	}
 
-	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
+	/**
+	 * Connect the actual routing node with another routing node to achieve a peer to peer connection
+	 * @param address routing node to connect with address
+	 * @param communicationInboudPortURI routing node to connect with communication inbound port uri
+	 * @param routingInboudPortURI routing node to connect with routing inbound port uri
+	 */
+	void connectRouting(NodeAddressI address, String communicationInboundPortURI, String routingInboudPortURI) {
 		try {
 			if (communicationConnectionPorts.containsKey(address)) {
 				return;
@@ -212,41 +244,44 @@ public class RoutingNodeComponent extends AbstractComponent {
 			doPortConnection(routingOutboundPort.getPortURI(), routingInboudPortURI,
 					RoutingConnector.class.getCanonicalName());
 
-			doPortConnection(port.getPortURI(), communicationInboudPortURI,
+			doPortConnection(port.getPortURI(), communicationInboundPortURI,
 					CommunicationConnector.class.getCanonicalName());
 
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
 			System.out
-					.println("ROUTING NODE A NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnectionPorts.size());
+					.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE " + address);
 			Set<RouteInfo> routeInfos = new HashSet<>();
 			RouteInfo info = new RouteInfo(address, 1);
 			routeInfos.add(info);
 			routes.put(address, routeInfos);
 			System.out.println("ROUTING NODE: total neighbors  = " + communicationConnectionPorts.size()
-			+ " routing neighbors = " + routes.size() + " other access points = " + accessPointsMap.size());
-
+			+ ", routing neighbors = " + routes.size() + ", other access points = " + accessPointsMap.size());
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
-
 	}
 
+	/**
+	 * @return closest access point to the routing node
+	 */
 	NodeAddressI getClosestAccessPoint() {
-
-		int min = 99999;
-		NodeAddressI closestAddressI = null;
+		int min = Integer.MAX_VALUE;
+		NodeAddressI closestAddress = null;
 		for (Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
 			if (entry.getValue() > min) {
 				min = entry.getValue();
-				closestAddressI = entry.getKey();
+				closestAddress = entry.getKey();
 			}
 		}
-		return closestAddressI;
+		return closestAddress;
 	}
 
+	/**
+	 * Transmit a message
+	 * @param m the message
+	 */
 	void transmitMessage(MessageI m) {
-		int N = 3;
 		System.out.println("FROM TRANSMIT MESSAGE IN ROUTING NODE");
 		if (!m.stillAlive()) {
 			System.out.println("Message is dead");
@@ -257,9 +292,6 @@ public class RoutingNodeComponent extends AbstractComponent {
 			System.out.println("MESSAGE IS RECEIVED IN ROUTING NODE");
 			return;
 		}
-
-
-		
 		try {
 			
 			if(m.getAddress() instanceof NetworkAddressI) {
@@ -290,15 +322,16 @@ public class RoutingNodeComponent extends AbstractComponent {
 				 }
 			}
 		}catch (Exception e) {
-			// TODO: handle exception
-		}
-		
-		
-		
+			e.printStackTrace();
+		}		
 	}
 
+	/**
+	 * Ask all neighbors if they have a route for an address
+	 * @param address
+	 * @return 1 if a neighbors is the address, -1 else
+	 */
 	int hasRouteFor(AddressI address) {
-
 		System.err.println(communicationConnectionPorts.containsKey(address));
 		if (communicationConnectionPorts.containsKey(address))
 			return 1;
@@ -311,6 +344,11 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	}
 
+	/**
+	 * Update the neighbor's route info ports map
+	 * @param address address of the routing node to add
+	 * @param routes routes info
+	 */
 	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
 		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ROUTING");
 		if (!this.routes.containsKey(address))
@@ -320,7 +358,12 @@ public class RoutingNodeComponent extends AbstractComponent {
 		currentInfos.addAll(routes);
 		this.routes.put(address, currentInfos);
 	}
-
+	
+	/**
+	 * Update the neighbor's access points number of hops map
+	 * @param address address of the routing node to add
+	 * @param numberOfHops the new number of hops
+	 */
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
 		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ACCESS POINT");
 		if (!accessPointsMap.containsKey(address))

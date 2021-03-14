@@ -8,17 +8,31 @@ import com.network.interfaces.NodeAddressI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 
+/**
+ * Class for routing nodes communication inbound ports
+ * 
+ * @author Softwarkers
+ *
+ */
 public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort implements CommunicationCI {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * create and initialize routing node communication inbound ports.
+	 * @param owner component that owns this port.
+	 * @exception Exception
+	 */
 	public RoutingNodeCommunicationInboundPort (ComponentI owner) throws Exception{
 		super(CommunicationCI.class, owner);
 	}
 	
+	/**
+	 * create and initialize routing node communication inbound ports.
+	 * @param uri unique identifier of the port.
+	 * @param owner component that owns this port.
+	 * @exception Exception
+	 */
 	public RoutingNodeCommunicationInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, CommunicationCI.class, owner);
 		assert owner instanceof RoutingNodeComponent;
@@ -30,18 +44,15 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 			((RoutingNodeComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
-
 	}
 
 	@Override
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
-
 		getOwner().handleRequest(c -> {
 			((RoutingNodeComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
-
 	}
 
 	@Override
@@ -50,7 +61,6 @@ public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort im
 			((RoutingNodeComponent) c).transmitMessage(m);
 			return null;
 		});
-
 	}
 
 	@Override

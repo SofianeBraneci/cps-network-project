@@ -18,26 +18,42 @@ import com.network.withplugin.ports.CommunicationInboundPortPlugin;
 import fr.sorbonne_u.components.AbstractPlugin;
 import fr.sorbonne_u.components.ComponentI;
 
+/**
+ * Class for communication plugins
+ * @author Softwarkers
+ *
+ */
 public class CommunicationPlugin extends AbstractPlugin {
 
 	private static final long serialVersionUID = 1L;
 
-	// this map represents the neighbors of the current node
+	/** neighbor's ports of the current node */
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnections;
+	/** address to send a message to*/
 	private NodeAddressI sendingAddressI;
+	/** Owner of the communication component address */
 	private NodeAddressI ownerAddress;
+	/** Number of hops between the node and his access points neighbors*/
 	private Map<NodeAddressI, Integer> accessPointsMap;
-	// communication Inbound port for the plugin
+	/** communication inbound port for the plugin*/
 	private CommunicationInboundPortPlugin communicationInboundPortPlugin;
-
+	
+	/**
+	 * create and initialize communication plugin
+	 * @param ownerAddress the owner address
+	 * @param accessPointsMap access points map
+	 */
 	public CommunicationPlugin(NodeAddressI ownerAddress, Map<NodeAddressI, Integer> accessPointsMap) {
 		super();
 		this.ownerAddress = ownerAddress;
 		this.accessPointsMap = accessPointsMap;
 	}
-
-	public void connect(NodeAddressI address, String communicationInboudURI) {
-
+	/**
+	 * Connect the owner with a terminal node to achieve a peer to peer connection
+	 * @param address terminal node to connect with address
+	 * @param communicationInboundURI terminal node to connect with communication inbound port uri
+	 */
+	public void connect(NodeAddressI address, String communicationInboundURI) {
 		/*
 		 * each time it get's called, we create a new out bound port add it to the
 		 * connections table, then do a port connection
@@ -49,42 +65,44 @@ public class CommunicationPlugin extends AbstractPlugin {
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(getOwner());
 			port.publishPort();
 
-			getOwner().doPortConnection(port.getPortURI(), communicationInboudURI,
+			getOwner().doPortConnection(port.getPortURI(), communicationInboundURI,
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnections.put(address, port);
-			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED !!!");
+			System.out.println("TERMINAL NODE : A NEW CONNECTION WAS ESTABLISHED");
 		} catch (Exception e) {
-
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
-
-	// maybe we'll delete it later it's not really required for the terminal node
+	/**
+	 * Connect the owner with a routing node to achieve a peer to peer connection
+	 * @param address routing node to connect with address
+	 * @param communicationInboudPortURI routing node to connect with communication inbound port uri
+	 * @param routingInboudPortURI routing node to connect with routing inbound port uri
+	 */
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
-
 		try {
-
 			if (communicationConnections.containsKey(address))
 				return;
-
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(getOwner());
 			port.publishPort();
 
 			getOwner().doPortConnection(port.getPortURI(), communicationInboudPortURI,
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnections.put(address, port);
-			System.out.println("ROUTING NODE : A NEW CONNECTION WAS ESTABLISHED !!!");
+			System.out.println("ROUTING NODE : A NEW CONNECTION WAS ESTABLISHED");
 
 		} catch (Exception e) {
 		}
 
 	}
-
+	
+	/**
+	 * @return closest access point to the owner
+	 */
 	NodeAddressI getClosestAccessPoint() {
 
-		int min = 99999;
+		int min = Integer.MAX_VALUE;
 		NodeAddressI closestAddressI = null;
 		for (Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
 			if (entry.getValue() > min) {
@@ -95,6 +113,10 @@ public class CommunicationPlugin extends AbstractPlugin {
 		return closestAddressI;
 	}
 
+	/**
+	 * Transmit a message
+	 * @param m the message
+	 */
 	public void transmitMessage(MessageI m) {
 		// Check if it has a route to message's address and send it via that port, else
 		int N = 3;
@@ -146,15 +168,12 @@ public class CommunicationPlugin extends AbstractPlugin {
 		}
 	}
 
-	public boolean containsAddress(AddressI address) {
-		return communicationConnections.containsKey(address);
-	}
-
+	/**
+	 * Ask all neighbors if they have a route for an address
+	 * @param address address to check route to
+	 * @return -1 if it doesn't
+	 */
 	public int hasRouteFor(AddressI address) {
-		/**
-		 * should ask for all neighbors if they have a route for that address
-		 */
-
 		if (getOwner() instanceof RoutingNodeComponent || getOwner() instanceof AccessPointComponent) {
 			if (communicationConnections.containsKey(address))
 				return 1;
@@ -184,14 +203,15 @@ public class CommunicationPlugin extends AbstractPlugin {
 	}
 
 	public void ping() {
-
 	}
 
+	/**
+	 * @return inbound port
+	 */
 	public String getInboundPortForPluginURI() {
 		try {
 			return communicationInboundPortPlugin.getPortURI();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;

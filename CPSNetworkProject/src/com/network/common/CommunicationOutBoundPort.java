@@ -22,7 +22,7 @@ public class CommunicationOutBoundPort extends AbstractOutboundPort implements C
 	/**
 	 * create and initialize communication outbound ports.
 	 * @param owner component that owns this port.
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public CommunicationOutBoundPort(ComponentI owner) throws Exception {
 		super(CommunicationCI.class, owner);
@@ -33,7 +33,7 @@ public class CommunicationOutBoundPort extends AbstractOutboundPort implements C
 	 * create and initialize communication outbound ports.
 	 * @param uri unique identifier of the port.
 	 * @param owner component that owns this port.
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public CommunicationOutBoundPort(String uri, ComponentI owner) throws Exception {
 		super(uri,  CommunicationCI.class, owner);

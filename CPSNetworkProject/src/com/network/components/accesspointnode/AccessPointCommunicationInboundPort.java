@@ -21,7 +21,7 @@ public class AccessPointCommunicationInboundPort extends AbstractInboundPort imp
 	/**
 	 * create and initialize access point communication inbound ports.
 	 * @param owner component that owns this port.
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public AccessPointCommunicationInboundPort(ComponentI owner) throws Exception {
 		super(CommunicationCI.class, owner);
@@ -30,7 +30,7 @@ public class AccessPointCommunicationInboundPort extends AbstractInboundPort imp
 	 * create and initialize access point communication inbound ports.
 	 * @param uri unique identifier of the port.
 	 * @param owner component that owns this port.
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public AccessPointCommunicationInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri,CommunicationCI.class ,owner);

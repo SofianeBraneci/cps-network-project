@@ -11,49 +11,85 @@ import com.network.interfaces.RegistrationCI;
 
 import fr.sorbonne_u.components.AbstractPlugin;
 
+/**
+ * Class for node registration plugins
+ * @author Softwarkers
+ *
+ */
 public class NodesRegistrationPlugin extends AbstractPlugin {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+	
+	/** Registration outbound port */
 	private RegistrationOutboundPort registrationOutboundPort;
 
 	public NodesRegistrationPlugin() throws Exception {
-
-	
-
+		super();
 	}
 
-	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
+	/**
+	 * Register a terminal node
+	 * @param address the node address
+	 * @param communicationInboundPortURI the node communication inbound port
+	 * @param initialPosition the node initial position
+	 * @param initialRange the node initial range
+	 * @return Set of the new node neighbors connection info that can route
+	 * @throws Exception
+	 */
 	public Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) throws Exception {
 		return registrationOutboundPort.registerTerminalNode(address, communicationInboundPortURI, initialPosition,
 				initialRange);
 	}
-
+	
+	/**
+	 * Register an access point
+	 * @param address the node address
+	 * @param communicationInboundPortURI the node communication inbound port
+	 * @param initialPosition the node initial position
+	 * @param initialRange the node initial range
+	 * @param routingInboundPortURI the node routing inbound port
+	 * @return Set of the new nod neighbors connection info that can route
+	 * @throws Exception
+	 */
 	public Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
 		return registrationOutboundPort.registerAccessPoint(address, communicationInboundPortURI, initialPosition,
 				initialRange, routingInboundPortURI);
 	}
-
+	
+	/**
+	 * Register a routing node
+	 * @param address the node address
+	 * @param communicationInboundPortURI the node communication inbound port
+	 * @param initialPosition the node initial position
+	 * @param initialRange the node initial range
+	 * @return Set of the new node neighbors connection info that can route
+	 * @throws Exception
+	 */
 	public Set<ConnectionInfo> registerRoutigNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) throws Exception {
 		return registrationOutboundPort.registerRoutigNode(address, communicationInboundPortURI, initialPosition,
 				initialRange, routingInboundPortURI);
 	}
-
+	
+	/**
+	 * Unregister a node
+	 * @param address address of the node to unregister
+	 * @throws Exception
+	 */
 	public void unregister(NodeAddressI address) throws Exception {
 		registrationOutboundPort.unregister(address);
 	}
 	
+	/** 
+	 * @return registration outbound port
+	 */
 	public String getRegistrationOutboundURI() {
 		
 		try {
 			return registrationOutboundPort.getPortURI();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -74,18 +110,15 @@ public class NodesRegistrationPlugin extends AbstractPlugin {
 	
 	@Override
 	public void finalise() throws Exception {
-		// TODO Auto-generated method stub
 		super.finalise();
 		getOwner().doPortDisconnection(registrationOutboundPort.getPortURI());
 	}
 	@Override
 	public void uninstall() throws Exception {
-		// TODO Auto-generated method stub
 		super.uninstall();
 		registrationOutboundPort.unpublishPort();
 		registrationOutboundPort.destroyPort();
 		removeRequiredInterface(RegistrationCI.class);
-		
 	}
 
 }

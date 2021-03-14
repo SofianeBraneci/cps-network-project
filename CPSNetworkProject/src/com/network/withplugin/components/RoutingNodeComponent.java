@@ -179,7 +179,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 						connectionInfo.getRoutingInboundPortURI());
 			}
 
-			getExecutorService(indexExecutor).execute(() -> {
+			/*getExecutorService(indexExecutor).execute(() -> {
 
 				try {
 					while (true) {
@@ -200,7 +200,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 				} catch (Exception e) {
 					// TODO: handle exception
 				}
-			});
+			});*/
 
 		}
 

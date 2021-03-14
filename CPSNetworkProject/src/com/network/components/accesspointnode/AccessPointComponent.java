@@ -49,7 +49,7 @@ public class AccessPointComponent extends AbstractComponent {
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnectionPorts;
 	/** neighbor's routing ports of the current node */
 	private Map<NodeAddressI, RoutingOutboundPort> routingOutboundPorts;
-	/** access points neighbor's route info ports of the current node */
+	/** access points neighbor's route info of the current node */
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
 	/** Number of hops between the access point and his neighbors*/
 	private Map<NodeAddressI, Integer> accessPointsMap;
@@ -92,7 +92,7 @@ public class AccessPointComponent extends AbstractComponent {
 
 	}
 	/**
-	 * create and initialize access points with predifined information
+	 * create and initialize an access points with predifined information
 	 * @throws Exception
 	 */
 	protected AccessPointComponent() throws Exception {

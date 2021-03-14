@@ -19,19 +19,19 @@ public class AccessPointRoutingInboundPort extends AbstractInboundPort implement
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * create and initialize routing outbound ports for access points.
+	 * create and initialize routing inbound ports for access points.
 	 * @param owner access point that owns this port
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public AccessPointRoutingInboundPort(ComponentI owner) throws Exception{
 		super(RoutingCI.class, owner);
 	}
 	
 	/**
-	 * create and initialize routing outbound ports for access points.
+	 * create and initialize routing inbound ports for access points.
 	 * @param uri unique identifier of the port.
 	 * @param owner access point that owns this port
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public AccessPointRoutingInboundPort(String uri, ComponentI owner)
 			throws Exception {
@@ -55,7 +55,5 @@ public class AccessPointRoutingInboundPort extends AbstractInboundPort implement
 		});
 		
 	}
-
-
 
 }

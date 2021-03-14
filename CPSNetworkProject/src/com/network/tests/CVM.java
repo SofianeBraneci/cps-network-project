@@ -40,7 +40,6 @@ public class CVM extends AbstractCVM {
 			c.startStandardLifeCycle(50000L);
 			System.exit(0);
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 		}
 	}

@@ -8,16 +8,31 @@ import com.network.interfaces.NodeAddressI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 
+/**
+ * Class for terminal nodes communication inbound ports
+ * 
+ * @author Softwarkers
+ *
+ */
 public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort implements CommunicationCI {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * create and initialize terminal node communication inbound ports.
+	 * @param owner component that owns this port.
+	 * @throws Exception
+	 */
 	public TerminalNodeCommunicationInboundPort(ComponentI owner) throws Exception{
 		super(CommunicationCI.class, owner);
 	}
 	
+	/**
+	 * create and initialize terminal node communication inbound ports.
+	 * @param uri unique identifier of the port.
+	 * @param owner component that owns this port.
+	 * @throws Exception
+	 */
 	public TerminalNodeCommunicationInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, CommunicationCI.class, owner);
 		assert owner instanceof TerminalNodeComponent;
@@ -29,8 +44,6 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 			((TerminalNodeComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
-		
-
 	}
 
 	@Override
@@ -41,7 +54,6 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 			((TerminalNodeComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
-
 	}
 
 	@Override
@@ -50,7 +62,6 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 			((TerminalNodeComponent) c).transmitMessage(m);
 			return null;
 		});
-
 	}
 
 	@Override
@@ -64,7 +75,5 @@ public class TerminalNodeCommunicationInboundPort extends AbstractInboundPort im
 			((CommunicationCI) c).ping();
 			return null;
 		});
-
 	}
-
 }

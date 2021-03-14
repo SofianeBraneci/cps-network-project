@@ -40,7 +40,6 @@ public class CVMNetwork1 extends AbstractCVM {
 			c.startStandardLifeCycle(50000L);
 			System.exit(0);
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 		}
 	}

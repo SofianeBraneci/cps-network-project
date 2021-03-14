@@ -7,8 +7,6 @@ import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
-import com.network.common.Message;
-import com.network.common.NetworkAddress;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
@@ -27,19 +25,36 @@ import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 
+/**
+ * Class for terminal node components
+ * @author Softwarkers
+ *
+ */
 @RequiredInterfaces(required = { RegistrationCI.class, CommunicationCI.class })
 @OfferedInterfaces(offered = { CommunicationCI.class })
 public class TerminalNodeComponent extends AbstractComponent {
-
+	/** the terminal node registration outbound port*/
 	protected RegistrationOutboundPort terminalNodeRegistrationOutboundPort;
+	/** the terminal node communication inbound port*/
 	protected TerminalNodeCommunicationInboundPort terminalNodeCommunicationInboundPort;
+	/** the terminal node address */
 	private NodeAddressI address;
+	/** the terminal node initial position */
 	private PositionI initialPosition;
+	/** the terminal node initial range */
 	private double initialRange;
-	// for keeping track of all the nodes with routing capability
+	/** neighbor's ports of the current node */
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnections;
+	/** address to send a message to*/
 	private NodeAddressI sendingAddressI = null;
 
+	/**
+	 * create and initialize terminal node
+	 * @param address the terminal node address
+	 * @param initialPosition the terminal node initial position
+	 * @param initialRange the terminal node initial range
+	 * @throws Exception
+	 */
 	protected TerminalNodeComponent(NodeAddressI address, PositionI initialPosition, double initialRange) {
 		super(1, 0);
 		this.address = address;
@@ -57,6 +72,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 		}
 	}
 
+	/**
+	 * create and initialize a terminal node with predifined information
+	 * @throws Exception
+	 */
 	protected TerminalNodeComponent() {
 		super(10, 0);
 
@@ -76,13 +95,12 @@ public class TerminalNodeComponent extends AbstractComponent {
 		}
 	}
 
+	/**
+	 * Connect the actual terminal node with another node to achieve a peer to peer connection
+	 * @param address node to connect with address
+	 * @param communicationInboundPortURI node to connect with communication inbound port uri
+	 */
 	void connect(NodeAddressI address, String communicationInboudURI) {
-
-		/*
-		 * each time it get's called, we create a new out bound port add it to the
-		 * connections table, then do a port connection
-		 * 
-		 **/
 		try {
 			if (communicationConnections.containsKey(address))
 				return;
@@ -94,20 +112,17 @@ public class TerminalNodeComponent extends AbstractComponent {
 			//
 			communicationConnections.put(address, port);
 			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
-			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnections.size());
+			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED : " + address);
 		} catch (Exception e) {
-
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
 
-	// maybe we'll delete it later it's not really required for the terminal node
-	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
-
-	}
-
+	/**
+	 * Transmit a message
+	 * @param m the message
+	 */
 	void transmitMessage(MessageI m) {
 		// Check if it has a route to message's address and send it via that port, else
 		int N = 3;
@@ -117,7 +132,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 				return;
 			}
 
-			// check if a neighbor has a roue
+			// check if a neighbor has a route
 			int route = hasRouteFor(m.getAddress());
 			if (route != -1) {
 				System.out.println("ROUTE LENGTH IS " + route);
@@ -135,20 +150,20 @@ public class TerminalNodeComponent extends AbstractComponent {
 				return;
 			}
 			// proceed by flooding the network
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	// no routing capability
+	/**
+	 * Ask the node neighbors if they have a route to an address
+	 * @param address
+	 * @return min steps to the address if he have a route, -1 else
+	 */
 	int hasRouteFor(AddressI address) {
-
-		// for(NodeAddressI add: communicationConnections.keySet())
-		// System.out.println(add.toString());
 		if (this.address.equals(address))
 			return 0;
-		int min = 9000;
+		int min = Integer.MAX_VALUE;
 		int counter = 0;
 		int current;
 		try {
@@ -160,13 +175,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 				if (current < min) {
 					sendingAddressI = entry.getKey();
 					min = current;
-
 				}
 			}
-
 			return counter == communicationConnections.size() ? -1 : min + 1;
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 			return -1;
 		}
@@ -197,19 +209,21 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 		}
 
-		// uncomment a message to test the seen or the unregister
+		// uncomment to test nregister
 //		terminalNodeRegistrationOutboundPort.unregister(address);
-//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 0);
-//		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
+		
+		// uncomment to test message sending
+/*		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 0);
+		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
 		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
 		transmitMessage(message);
+*/
 		super.execute();
 
 	}
 
 	@Override
 	public synchronized void finalise() throws Exception {
-		// TODO Auto-generated method stub
 		doPortDisconnection(terminalNodeRegistrationOutboundPort.getPortURI());
 		for (CommunicationOutBoundPort port : communicationConnections.values()) {
 			doPortDisconnection(port.getPortURI());
@@ -219,7 +233,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
-		// TODO Auto-generated method stub
+
 		try {
 			terminalNodeRegistrationOutboundPort.unpublishPort();
 			terminalNodeCommunicationInboundPort.unpublishPort();

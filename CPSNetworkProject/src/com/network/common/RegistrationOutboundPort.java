@@ -22,7 +22,7 @@ public class RegistrationOutboundPort  extends AbstractOutboundPort implements R
 	/**
 	 * create and initialize registration outbound ports.
 	 * @param owner component that owns this port.
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public RegistrationOutboundPort(ComponentI owner) throws Exception{
 		super(RegistrationCI.class, owner);
@@ -32,7 +32,7 @@ public class RegistrationOutboundPort  extends AbstractOutboundPort implements R
 	 * create and initialize registration outbound ports.
 	 * @param uri unique identifier of the port.
 	 * @param owner component that owns this port.
-	 * @throws Exception
+	 * @exception Exception
 	 */
 	public RegistrationOutboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, RegistrationCI.class,  owner);

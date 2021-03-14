@@ -7,15 +7,21 @@ import com.network.interfaces.NodeAddressI;
 
 import fr.sorbonne_u.components.connectors.AbstractConnector;
 
+/**
+ * Class for a communication connector
+ * @author Softwarkers
+ *
+ */
 public class CommunicationConnector extends AbstractConnector implements CommunicationCI {
-
+	/**
+	 * Create a communication connector
+	 */
 	public CommunicationConnector() {
 		super();
 
 	}
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
-		// TODO Auto-generated method stub
 		((CommunicationCI)offering).connect(address, communicationInboudURI);
 		
 	}
@@ -23,7 +29,6 @@ public class CommunicationConnector extends AbstractConnector implements Communi
 	@Override
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
-		// TODO Auto-generated method stub
 		((CommunicationCI)offering).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 		
 	}
@@ -35,7 +40,6 @@ public class CommunicationConnector extends AbstractConnector implements Communi
 
 	@Override
 	public int hasRouteFor(AddressI address) throws Exception {
-		// TODO Auto-generated method stub
 		return ((CommunicationCI)offering).hasRouteFor(address);
 	}
 

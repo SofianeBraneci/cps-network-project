@@ -8,10 +8,14 @@ import com.network.interfaces.RoutingCI;
 
 import fr.sorbonne_u.components.connectors.AbstractConnector;
 
+/**
+ * Class for a routing connector
+ * @author Softwarkers
+ */
 public class RoutingConnector extends AbstractConnector implements RoutingCI {
 
 	public RoutingConnector() {
-		// TODO Auto-generated constructor stub
+		super();
 	}
 
 	@Override
