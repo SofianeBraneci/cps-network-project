@@ -25,6 +25,7 @@ import com.network.interfaces.NodeAddressI;
 import com.network.interfaces.PositionI;
 import com.network.interfaces.RegistrationCI;
 import com.network.interfaces.RoutingCI;
+import com.network.withplugin.components.RoutingNodeComponent;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
@@ -52,6 +53,7 @@ public class AccessPointComponent extends AbstractComponent {
 	private PositionI initialPosition;
 	private double initialRange;
 	private NodeAddressI sendingAddressI;
+	private int executorServiceIndex;
 
 	protected AccessPointComponent(NodeAddressI address, PositionI initialPosition, double initialRange)
 			throws Exception {
@@ -72,6 +74,8 @@ public class AccessPointComponent extends AbstractComponent {
 		this.accessPointCommunicationInbountPort.publishPort();
 		this.accessPointRoutingInboundPort.publishPort();
 		this.registrationOutboundPort.publishPort();
+		this.executorServiceIndex = createNewExecutorService("ACCESS POINT EXECUTOR SERVICE URI", 1, false);
+
 	}
 
 	protected AccessPointComponent() throws Exception {
@@ -109,14 +113,38 @@ public class AccessPointComponent extends AbstractComponent {
 		System.out.println("Access Point node connections = " + connectionInfos.size());
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-			if (!connectionInfo.getCommunicationInboudPort().startsWith("TEST")) {
 
-				this.connectRouting(address, connectionInfo.getCommunicationInboudPort(),
-						connectionInfo.getRoutingInboundPortURI());
-			}
+			this.connectRouting(address, connectionInfo.getCommunicationInboudPort(),
+					connectionInfo.getRoutingInboundPortURI());
 
 		}
-		// registrationOutboundPort.unregister(address);
+
+		// dynamically propagate the routing table to it's neighbors
+
+		getExecutorService(executorServiceIndex).execute(() -> {
+			try {
+				while (true) {
+					for (RoutingOutboundPort neighborBoundPort : routingOutboundPorts.values()) {
+						for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
+
+							neighborBoundPort.updateRouting(entry.getKey(), entry.getValue());
+						}
+						neighborBoundPort.updateAccessPoint(address, 1);
+						for (Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
+							
+							neighborBoundPort.updateAccessPoint(entry.getKey(), entry.getValue() + 1);
+						}
+						
+					}
+					Thread.sleep(200L);
+				}
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
+
+		});
+//		 registrationOutboundPort.unregister(address);
 
 		super.execute();
 	}
@@ -194,19 +222,14 @@ public class AccessPointComponent extends AbstractComponent {
 
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
-			System.out
-					.println("ACCESS POINT  NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE !!!" + communicationConnectionPorts.size());
-
-			for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
-				routingOutboundPort.updateRouting(entry.getKey(), entry.getValue());
-				routingOutboundPort.updateAccessPoint(this.address, 1);
-			}
-
+			System.out.println("ACCESS POINT  NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE !!!"
+					+ communicationConnectionPorts.size());
 			Set<RouteInfo> routeInfos = new HashSet<>();
 			RouteInfo info = new RouteInfo(address, 1);
 			routeInfos.add(info);
 			routes.put(address, routeInfos);
-
+			System.out.println("ACCESS POINT: total neighbors  = " + communicationConnectionPorts.size()
+					+ " routing neighbors = " + routes.size() + " other access points = " + accessPointsMap.size());
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -290,8 +313,13 @@ public class AccessPointComponent extends AbstractComponent {
 			return;
 		if (!this.routes.containsKey(address))
 			this.routes.put(address, routes);
-		if (this.routes.get(address).size() > routes.size())
-			this.routes.put(address, routes);
+		Set<RouteInfo> currentInfos = this.routes.get(address);
+		currentInfos.addAll(routes);
+
+		System.out.println("ACCESS POINT UPDATE ROUTING: A NEW ENTRY WAS RECEIVED THE TOTAL SIZE OF THE ENTRY IS : "
+				+ currentInfos.size());
+
+		this.routes.put(address, currentInfos);
 	}
 
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {

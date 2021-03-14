@@ -50,6 +50,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	private NodeAddressI nodeAddress, sendingAddressI;
 	private PositionI initialPosition;
 	private double initialRange;
+	private int executorIndex;
 
 	protected RoutingNodeComponent(NodeAddressI address, PositionI initiaPosition, double initialRange)
 			throws Exception {
@@ -70,6 +71,8 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.routingNodeCommunicationInboundPort.publishPort();
 		this.routingNodeRegistrationOutboundPort.publishPort();
 		this.routingInboundPort.publishPort();
+		this.executorIndex = createNewExecutorService("ROUTING NODE EXECUTOR SERVICE", 1, false);
+
 	}
 
 	protected RoutingNodeComponent() throws Exception {
@@ -104,13 +107,34 @@ public class RoutingNodeComponent extends AbstractComponent {
 		System.out.println("ROUTING NODE CONNECTIONS = " + connectionInfos.size());
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-			if (connectionInfo.getCommunicationInboudPort().startsWith("TEST")) {
-				continue;
-			} else {
-				this.connectRouting(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
-						connectionInfo.getRoutingInboundPortURI());
-			}
+			this.connectRouting(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
+					connectionInfo.getRoutingInboundPortURI());
 		}
+		getExecutorService(executorIndex).execute(() -> {
+			while(true) {
+				try {
+					
+					for(RoutingOutboundPort neighboroOutboundPort: routingOutboundPorts.values()) {
+						for(Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
+							neighboroOutboundPort.updateRouting(entry.getKey(), entry.getValue());
+						}
+						
+						for(Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
+							neighboroOutboundPort.updateAccessPoint(entry.getKey(), entry.getValue() + 1);
+						}
+					}
+					
+					
+					Thread.sleep(2000L);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 		// routingNodeRegistrationOutboundPort.unregister(nodeAddress);
 
 	}
@@ -160,12 +184,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 			doPortConnection(port.getPortURI(), communicationInboudURI,
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnectionPorts.put(address, port);
-			System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE");
-			System.out.println("ROUITN NODE, CURRENT NEIGHBORS ARE:");
-			for (NodeAddressI addressI : communicationConnectionPorts.keySet()) {
-				System.out.println(addressI.toString());
-			}
-
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -173,7 +192,6 @@ public class RoutingNodeComponent extends AbstractComponent {
 	}
 
 	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
-
 		try {
 			if (communicationConnectionPorts.containsKey(address)) {
 				return;
@@ -182,28 +200,24 @@ public class RoutingNodeComponent extends AbstractComponent {
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
 			RoutingOutboundPort routingOutboundPort = new RoutingOutboundPort(this);
-
 			routingOutboundPort.publishPort();
 
 			doPortConnection(routingOutboundPort.getPortURI(), routingInboudPortURI,
 					RoutingConnector.class.getCanonicalName());
 
-			doPortConnection(port.getPortURI(), routingNodeCommunicationInboundPort.getPortURI(),
+			doPortConnection(port.getPortURI(), communicationInboudPortURI,
 					CommunicationConnector.class.getCanonicalName());
 
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
 			System.out
 					.println("ROUTING NODE A NEW CONNECTION WAS ESTABLISHED !!!" + communicationConnectionPorts.size());
-
-			for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
-				routingOutboundPort.updateRouting(entry.getKey(), entry.getValue());
-			}
-
 			Set<RouteInfo> routeInfos = new HashSet<>();
 			RouteInfo info = new RouteInfo(address, 1);
 			routeInfos.add(info);
 			routes.put(address, routeInfos);
+			System.out.println("ROUTING NODE: total neighbors  = " + communicationConnectionPorts.size()
+			+ " routing neighbors = " + routes.size() + " other access points = " + accessPointsMap.size());
 
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -227,11 +241,11 @@ public class RoutingNodeComponent extends AbstractComponent {
 	void transmitMessage(MessageI m) {
 		int N = 3;
 		System.out.println("FROM TRANSMIT MESSAGE IN ROUTING NODE");
-		if( ! m.stillAlive()) {
+		if (!m.stillAlive()) {
 			System.out.println("Message is dead");
 			return;
 		}
-		
+
 		if (nodeAddress.equals(m.getAddress())) {
 			System.out.println("MESSAGE IS RECEIVED IN ROUTING NODE");
 			return;
@@ -244,14 +258,19 @@ public class RoutingNodeComponent extends AbstractComponent {
 				System.out.println("ROUTING NODE HAS AN ENTRY FOR THE CURRENT ADDRESS");
 				if (m.getAddress() instanceof NetworkAddressI) {
 					NodeAddressI closestAccessPoint = getClosestAccessPoint();
+					if (closestAccessPoint == null) {
+						System.err.println("NO ACCESS POINT TO BE FOUND!");
+						return;
+					}
 					communicationConnectionPorts.get(closestAccessPoint).transmitMessage(m);
 				} else {
 					sendingPort.transmitMessage(m);
 				}
 			} else {
 				System.out.println("Inondation");
-				for(CommunicationOutBoundPort port: communicationConnectionPorts.values()) {
-					if(N == 0) break;
+				for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
+					if (N == 0)
+						break;
 					port.transmitMessage(m);
 					N--;
 				}
@@ -282,8 +301,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 		System.out.println(address.toString());
 		if (!this.routes.containsKey(address))
 			this.routes.put(address, routes);
-		// if (this.routes.get(address).size() > routes.size()) this.routes.put(address,
-		// routes);sdfhgqsdfjhqsdggfuhqsgfuyhjqsdgfjsdfgjhsdqfgjhsdqfgjshjdfgqs
+	
 		Set<RouteInfo> currentInfos = this.routes.get(address);
 		currentInfos.addAll(routes);
 		this.routes.put(address, currentInfos);

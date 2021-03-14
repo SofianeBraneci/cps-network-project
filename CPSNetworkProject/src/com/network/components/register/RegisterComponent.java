@@ -96,14 +96,12 @@ public class RegisterComponent extends AbstractComponent {
 		super.execute();
 //		terminalNodesTable.put(new NodeAddress("IP Address"),
 //				new NodeComponentInformationWrapper("sd", new Position(12, 3)));
-		accessPointsNodesTable.put(new NodeAddress("IP"),
-				new NodeComponentInformationWrapper("TEST_ACCESSPOINT_PORT_URI", new Position(12, 12), "fdfd"));
-		routinNodesTable.put(new NodeAddress("IPP"),
-				new NodeComponentInformationWrapper("TEST_ROUTING_PORT_URI", new Position(12, 10), "fff"));
+//		accessPointsNodesTable.put(new NodeAddress("IP"),
+//				new NodeComponentInformationWrapper("TEST_ACCESSPOINT_PORT_URI", new Position(12, 12), "fdfd"));
+//		routinNodesTable.put(new NodeAddress("IPP"),
+//				new NodeComponentInformationWrapper("TEST_ROUTING_PORT_URI", new Position(12, 10), "fff"));
 
-		System.out.println("Excuted");
-		System.out.println("TOTAL TEST ENTRIES IN THE ACCESS POINT TABLE IS : " + accessPointsNodesTable.size());
-		System.out.println("TOTAL TEST ENTRIES IN THE ROUTING NODES TABLE IS : " + routinNodesTable.size());
+		System.out.println("REGISTER COMPONENT IS LAUNCHED, WAITING FOR REGISTRATIONS");
 
 
 	}
@@ -111,6 +109,7 @@ public class RegisterComponent extends AbstractComponent {
 	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
 	Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) {
+		System.out.println("REGISTERING A NEW TERMINAL NODE IP: " + address);
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 1);
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 2));
 		terminalNodesTable.put(address,
@@ -122,6 +121,7 @@ public class RegisterComponent extends AbstractComponent {
 
 	Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
+		System.out.println("REGISTERING A NEW ACCESS POINT IP: " + address);
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, Double.POSITIVE_INFINITY, 2);
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
 		accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
@@ -132,6 +132,7 @@ public class RegisterComponent extends AbstractComponent {
 
 	Set<ConnectionInfo> registerRoutigNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
+		System.out.println("REGISTERING A NEW ROUTING NODE IP: " + address);
 		Set<ConnectionInfo> neighbores = getNeighboors(address, initialPosition, initialRange, 2);
 		neighbores.addAll(getNeighboors(address, initialPosition, initialRange, 1));
 		routinNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition,

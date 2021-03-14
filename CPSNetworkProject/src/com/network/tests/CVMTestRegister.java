@@ -10,9 +10,9 @@ import com.network.components.accesspointnode.*;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
 
-public class CVM extends AbstractCVM {
+public class CVMTestRegister extends AbstractCVM {
 
-	public CVM() throws Exception {
+	public CVMTestRegister() throws Exception {
 
 	}
 
@@ -36,7 +36,7 @@ public class CVM extends AbstractCVM {
 
 	public static void main(String[] args) {
 		try {
-			CVM c = new CVM();
+			CVMTestRegister c = new CVMTestRegister();
 			c.startStandardLifeCycle(50000L);
 			System.exit(0);
 		} catch (Exception e) {
