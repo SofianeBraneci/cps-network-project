@@ -10,34 +10,32 @@ import com.network.components.accesspointnode.*;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
 
-public class CVMNetwork4 extends AbstractCVM {
+public class CVMSendingMessage2 extends AbstractCVM {
 
-	public CVMNetwork4() throws Exception {
+	public CVMSendingMessage2() throws Exception {
 
 	}
 
 	@Override
 	public void deploy() throws Exception {
-
+		// test message sending, just make sure to uncomment the
 		AbstractComponent.createComponent(RegisterComponent.class.getCanonicalName(), new Object[] {});
 		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),
-				new Object[] { new NodeAddress("192.168.25.1"), new Position(1, 2), 1120.0 });
+				new Object[] { new NodeAddress("192.168.25.1"), new Position(3, 2), 11200.0 });
 		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),
 				new Object[] { new NodeAddress("192.168.25.2"), new Position(3, 2), 11200.0 });
-		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),
+		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
 				new Object[] { new NodeAddress("192.168.25.3"), new Position(12, 112), 11200.0 });
-		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),
-				new Object[] { new NodeAddress("192.168.25.5"), new Position(2, 3), 11.0 });
-//		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
-//				new Object[] { new NodeAddress("192.168.25.6"), new Position(3, 2), 10220.0 });
-//		
+		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
+				new Object[] { new NodeAddress("192.168.25.6"), new Position(3, 2), 10220.0 });
+
 		super.deploy();
 	}
 
 	public static void main(String[] args) {
 		try {
-			CVMNetwork4 c = new CVMNetwork4();
-			c.startStandardLifeCycle(50000L);
+			CVMSendingMessage2 c = new CVMSendingMessage2();
+			c.startStandardLifeCycle(5000L);
 			System.exit(0);
 		} catch (Exception e) {
 			// TODO: handle exception

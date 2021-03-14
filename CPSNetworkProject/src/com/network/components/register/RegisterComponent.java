@@ -21,7 +21,7 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 public class RegisterComponent extends AbstractComponent {
 
 	protected RegisterServiceInboundPort registerPort;
-	public static  String REGISTER_INBOUND_PORT_URI;
+	public static String REGISTER_INBOUND_PORT_URI;
 
 	// terminal nodes
 	private Map<NodeAddressI, NodeComponentInformationWrapper> terminalNodesTable;
@@ -34,7 +34,7 @@ public class RegisterComponent extends AbstractComponent {
 		super(10, 0);
 		try {
 			registerPort = new RegisterServiceInboundPort(this);
-			REGISTER_INBOUND_PORT_URI  = registerPort.getPortURI();
+			REGISTER_INBOUND_PORT_URI = registerPort.getPortURI();
 			registerPort.publishPort();
 			terminalNodesTable = new HashMap<>();
 			routinNodesTable = new HashMap<>();
@@ -103,7 +103,6 @@ public class RegisterComponent extends AbstractComponent {
 
 		System.out.println("REGISTER COMPONENT IS LAUNCHED, WAITING FOR REGISTRATIONS");
 
-
 	}
 
 	// WHEN DOING THE REGISTRATION, ONLY RETURN THE NODES THAT CAN DO ROUTING
@@ -117,7 +116,6 @@ public class RegisterComponent extends AbstractComponent {
 		System.out.println("current terminal nodes table size " + terminalNodesTable.size());
 		return neighbores;
 	}
-
 
 	Set<ConnectionInfo> registerAccessPoint(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
@@ -146,7 +144,7 @@ public class RegisterComponent extends AbstractComponent {
 		terminalNodesTable.remove(address);
 		routinNodesTable.remove(address);
 		accessPointsNodesTable.remove(address);
-		System.out.println("A node was unregistered");
+		System.out.println("A node with ip :  " + address + ", was unregistered");
 
 	}
 }

@@ -27,17 +27,19 @@ public class CVMNetwork3 extends AbstractCVM {
 		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),
 				new Object[] { new NodeAddress("192.168.25.3"), new Position(12, 112), 11200.0 });
 		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),
-				new Object[] { new NodeAddress("192.168.25.5"), new Position(2, 3), 11.0 });
-//		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
-//				new Object[] { new NodeAddress("192.168.25.6"), new Position(3, 2), 10220.0 });
-//		
+				new Object[] { new NodeAddress("192.168.25.5"), new Position(2, 3), 110000.0 });
+		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
+				new Object[] { new NodeAddress("192.168.25.6"), new Position(3, 2), 10220.0 });
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),
+				new Object[] { new NodeAddress("192.168.25.7"), new Position(5, 2), 1120.0 });
+		
 		super.deploy();
 	}
 
 	public static void main(String[] args) {
 		try {
 			CVMNetwork3 c = new CVMNetwork3();
-			c.startStandardLifeCycle(50000L);
+			c.startStandardLifeCycle(5000L);
 			System.exit(0);
 		} catch (Exception e) {
 			// TODO: handle exception

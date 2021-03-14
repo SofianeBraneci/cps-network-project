@@ -36,7 +36,6 @@ public class AccessPointComponent extends AbstractComponent {
 	private final String REGISTRATION_PLUGIN_URI = "REGISTRATION_PLUGIN_URI";
 	private final String COMMUNICATION_PLUGIN_URI = "COMMUNICATION_PLUGIN_URI";
 	private final String ROUTING_PLUGIN_URI = "ROUTING_PLUGIN_URI";
-
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
 	private Map<NodeAddressI, Integer> accessPointsMap;
 
@@ -46,12 +45,14 @@ public class AccessPointComponent extends AbstractComponent {
 		this.address = address;
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
+		this.accessPointsMap = new HashMap<NodeAddressI, Integer>();
+		this.routes = new HashMap<>();
 
-		this.communicationPlugin = new CommunicationPlugin(address);
+		this.communicationPlugin = new CommunicationPlugin(address, accessPointsMap);
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin();
+		this.routingPlugin = new RoutingPlugin(accessPointsMap,routes);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
 		
@@ -59,8 +60,6 @@ public class AccessPointComponent extends AbstractComponent {
 		this.nodesRegistrationPlugin.setPluginURI(REGISTRATION_PLUGIN_URI);
 		this.installPlugin(nodesRegistrationPlugin);
 		
-		this.routes = new HashMap<>();
-		this.accessPointsMap = new HashMap<NodeAddressI, Integer>();
 
 	}
 
@@ -70,17 +69,16 @@ public class AccessPointComponent extends AbstractComponent {
 		this.address = new NodeAddress("some ip");
 		this.initialPosition = new Position(12, 23);
 		this.initialRange = 120;
-
-		this.communicationPlugin = new CommunicationPlugin(address);
+		this.accessPointsMap = new HashMap<NodeAddressI, Integer>();
+		this.routes = new HashMap<>();
+		this.communicationPlugin = new CommunicationPlugin(address, accessPointsMap);
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin();
+		this.routingPlugin = new RoutingPlugin(accessPointsMap, null);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
 
-		this.routes = new HashMap<>();
-		this.accessPointsMap = new HashMap<NodeAddressI, Integer>();
 
 	}
 
@@ -131,7 +129,7 @@ public class AccessPointComponent extends AbstractComponent {
 
 	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
 		communicationPlugin.connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
-
+		routingPlugin.addEntryTotheTable(address, routingInboudPortURI);
 	}
 
 	void transmitMessage(MessageI m) {
@@ -149,17 +147,21 @@ public class AccessPointComponent extends AbstractComponent {
 	}
 
 	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
-		if (!this.routes.containsKey(address))
-			this.routes.put(address, routes);
-		if (this.routes.get(address).size() > routes.size())
-			this.routes.put(address, routes);
+		try {
+			routingPlugin.updateRouting(address, routes);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
-		if (!accessPointsMap.containsKey(address))
-			accessPointsMap.put(address, numberOfHops);
-		if (accessPointsMap.get(address) > numberOfHops)
-			accessPointsMap.put(address, numberOfHops);
+		try {
+			routingPlugin.updateAccessPoint(address, numberOfHops);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

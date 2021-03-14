@@ -21,44 +21,52 @@ public class RoutingPlugin extends AbstractPlugin {
 	 */
 	private static final long serialVersionUID = 1L;
 	private RoutingInboundPortPlugin routingInboundPortPlugin;
-
 	private Map<NodeAddressI, RoutingOutboundPort> routingTable;
+	private Map<NodeAddressI, Set<RouteInfo>> routes;
+	private Map<NodeAddressI, Integer> accessPointsMap;
 
-	public RoutingPlugin() {
+	public RoutingPlugin(Map<NodeAddressI, Integer> accessPointsMap, Map<NodeAddressI, Set<RouteInfo>> routes) {
 		super();
+		this.accessPointsMap = accessPointsMap;
+		this.routes = routes;
 	}
 
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) throws Exception {
-		((RoutingCI) getOwner()).updateRouting(address, routes);
+		System.out.println("ROUTING NODE IS UPDATING HIS ROUTES");
+		if (!this.routes.containsKey(address))
+			this.routes.put(address, routes);
+		// if (this.routes.get(address).size() > routes.size()) this.routes.put(address,
+		// routes);
+		Set<RouteInfo> currentInfos = this.routes.get(address);
+		currentInfos.addAll(routes);
+		this.routes.put(address, currentInfos);
+		;
 
 	}
 
 	public void updateAccessPoint(NodeAddressI address, int numberOfHops) throws Exception {
-		((RoutingCI) getOwner()).updateAccessPoint(address, numberOfHops);
+		if (!accessPointsMap.containsKey(address))
+			accessPointsMap.put(address, numberOfHops);
+		if (accessPointsMap.get(address) > numberOfHops)
+			accessPointsMap.put(address, numberOfHops);
 
 	}
 
-	public void propagateRoutingTable(NodeAddressI to, NodeAddressI address, Set<RouteInfo> routes) {
-
-		try {
-			routingTable.get(to).updateRouting(address, routes);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public Map<NodeAddressI, RoutingOutboundPort> getRoutingTable() {
+		return routingTable;
 
 	}
+	
+	public Map<NodeAddressI, Set<RouteInfo>> getRoutes(){
+		return routes;
+	}
+
 	public String getRoutingInboundPortURI() throws Exception {
 		return routingInboundPortPlugin.getPortURI();
 	}
-
-	public void propagateAccessPoint(NodeAddressI to, NodeAddressI address, int numberOfHops) {
-		try {
-			routingTable.get(to).updateAccessPoint(address, numberOfHops);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	
+	public Map<NodeAddressI, Integer> getAccessPoints(){
+		return accessPointsMap;
 	}
 
 	public void addEntryTotheTable(NodeAddressI address, String routingInboundPort) {
@@ -71,6 +79,7 @@ public class RoutingPlugin extends AbstractPlugin {
 			// sending all the entries contained in the current routing table to it's new
 			// neighbor
 			routingTable.put(address, port);
+			System.out.println("A new entry was added to the routing table");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

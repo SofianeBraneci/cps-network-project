@@ -44,7 +44,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 			this.terminalNodeRegistrationPlugin = new NodesRegistrationPlugin();
 			this.terminalNodeRegistrationPlugin.setPluginURI(TERMINAL_NODE_REGISTRATION_PLUGIN_URI);
 			this.installPlugin(terminalNodeRegistrationPlugin);
-			this.terminalCommunicationPlugin = new CommunicationPlugin(address);
+			this.terminalCommunicationPlugin = new CommunicationPlugin(address, null);
 			this.terminalCommunicationPlugin.setPluginURI(TERMINAL_NODE_COMMUICATION_PLUGIN_URI);
 			this.installPlugin(terminalCommunicationPlugin);
 
@@ -63,7 +63,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 			this.terminalNodeRegistrationPlugin = new NodesRegistrationPlugin();
 			this.terminalNodeRegistrationPlugin.setPluginURI(TERMINAL_NODE_REGISTRATION_PLUGIN_URI);
 			this.installPlugin(terminalNodeRegistrationPlugin);
-			this.terminalCommunicationPlugin = new CommunicationPlugin(address);
+			this.terminalCommunicationPlugin = new CommunicationPlugin(address, null);
 			this.terminalCommunicationPlugin.setPluginURI(TERMINAL_NODE_COMMUICATION_PLUGIN_URI);
 			this.installPlugin(terminalCommunicationPlugin);
 

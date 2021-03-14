@@ -112,32 +112,30 @@ public class TerminalNodeComponent extends AbstractComponent {
 		// Check if it has a route to message's address and send it via that port, else
 		int N = 3;
 		try {
-			if(this.address.equals(m.getAddress())) {
+			if (this.address.equals(m.getAddress())) {
 				System.out.println("FROM TERMINAL NODE: A MESSAGE IS RECEIVED");
 				return;
 			}
-			
+
 			// check if a neighbor has a roue
 			int route = hasRouteFor(m.getAddress());
-			
-			if(route != -1) {
+			if (route != -1) {
 				System.out.println("ROUTE LENGTH IS " + route);
 				System.out.println("THE SENDING ADDRESS IS " + sendingAddressI);
 				communicationConnections.get(sendingAddressI).transmitMessage(m);
-		
-			}
-			else {
+
+			} else {
 				System.out.println("ALL NEIGHBORS RESPONDED WITH A -1, PROCEED WITH FLODING");
-				for(CommunicationOutBoundPort port: communicationConnections.values()) {
-					if(N == 0 ) break;
+				for (CommunicationOutBoundPort port : communicationConnections.values()) {
+					if (N == 0)
+						break;
 					port.transmitMessage(m);
 					N--;
 				}
 				return;
 			}
 			// proceed by flooding the network
-					
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -145,30 +143,31 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 	// no routing capability
 	int hasRouteFor(AddressI address) {
-		
+
 		// for(NodeAddressI add: communicationConnections.keySet())
 		// System.out.println(add.toString());
-		if(this.address.equals(address)) return 0;
+		if (this.address.equals(address))
+			return 0;
 		int min = 9000;
 		int counter = 0;
 		int current;
 		try {
-			
+
 			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnections.entrySet()) {
-				System.out.println("TERMINAL CURRENT ADDRESSE " + entry.getKey());
 				current = entry.getValue().hasRouteFor(address);
-				System.out.println(current);
-				if(current == -1) counter++;
+				if (current == -1)
+					counter++;
 				if (current < min) {
 					sendingAddressI = entry.getKey();
 					min = current;
 
 				}
 			}
-			
-			return counter ==  communicationConnections.size() ? -1 : min + 1;
+
+			return counter == communicationConnections.size() ? -1 : min + 1;
 		} catch (Exception e) {
 			// TODO: handle exception
+			e.printStackTrace();
 			return -1;
 		}
 
@@ -194,15 +193,16 @@ public class TerminalNodeComponent extends AbstractComponent {
 		// connect with them
 		System.out.println("TERMINAL NODE connection size = " + connectionInfos.size());
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-			if (!connectionInfo.getCommunicationInboudPort().startsWith("TEST")) {
+			connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
 
-				connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
-			}
 		}
 
-		// terminalNodeRegistrationOutboundPort.unregister(address);
-		Message message = new Message(new NodeAddress("192.168.25.5"), "Hello", 12 );
-		transmitMessage(message);
+		// uncomment a message to test the seen or the unregister
+//		terminalNodeRegistrationOutboundPort.unregister(address);
+//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5);
+//		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
+//		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
+//		transmitMessage(message);
 		super.execute();
 
 	}

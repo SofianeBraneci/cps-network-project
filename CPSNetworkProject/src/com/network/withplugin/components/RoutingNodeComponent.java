@@ -1,6 +1,7 @@
 package com.network.withplugin.components;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -8,6 +9,7 @@ import java.util.Map.Entry;
 import com.network.common.ConnectionInfo;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
+import com.network.common.RoutingOutboundPort;
 import com.network.common.RouteInfo;
 import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
@@ -32,6 +34,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	private final String COMMUNICATION_PLUGIN_URI = "ROUTINF_COMMUNICATION_PLUGIN_URI";
 	private final String ROUTING_PLUGIN_URI = "ROUTING_NODE_ROUTING_PLUGIN_URI";
 	private final String REGISTRATION_PLUGING_URI = "REGISTRATION_PLUGING_URI";
+	private int indexExecutor;
 
 	protected RoutingNodeComponent(NodeAddressI address, PositionI initiaPosition, double initialRange)
 			throws Exception {
@@ -43,17 +46,18 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.routes = new HashMap<>();
 		this.accessPointsMap = new HashMap<>();
 
-		this.communicationPlugin = new CommunicationPlugin(address);
+		this.communicationPlugin = new CommunicationPlugin(address, accessPointsMap);
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin();
+		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
-		
+
 		this.nodesRegistrationPlugin = new NodesRegistrationPlugin();
 		this.nodesRegistrationPlugin.setPluginURI(REGISTRATION_PLUGING_URI);
 		this.installPlugin(nodesRegistrationPlugin);
+		this.indexExecutor = createNewExecutorService("Routing node excutor service", 1, false);
 	}
 
 	protected RoutingNodeComponent() throws Exception {
@@ -65,20 +69,18 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.routes = new HashMap<>();
 		this.accessPointsMap = new HashMap<>();
 
-		this.communicationPlugin = new CommunicationPlugin(address);
+		this.communicationPlugin = new CommunicationPlugin(address, null);
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin();
+		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
-		
+
 		this.nodesRegistrationPlugin = new NodesRegistrationPlugin();
 		this.nodesRegistrationPlugin.setPluginURI(REGISTRATION_PLUGING_URI);
 		this.installPlugin(nodesRegistrationPlugin);
 	}
-	
-	
 
 	void connect(NodeAddressI address, String communicationInboudURI) {
 //		logMessage("FROM Routing NODE, CONNECTION WAS INVOKED !!!!! " + communicationInboudURI);
@@ -112,7 +114,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
 		communicationPlugin.connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
-
+		routingPlugin.addEntryTotheTable(address, routingInboudPortURI);
 	}
 
 	NodeAddressI getClosestAccessPoint() {
@@ -138,23 +140,23 @@ public class RoutingNodeComponent extends AbstractComponent {
 	}
 
 	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
-		System.out.println("ROUTING NODE IS UPDATING HIS ROUTES");
-		if (!this.routes.containsKey(address))
-			this.routes.put(address, routes);
-		// if (this.routes.get(address).size() > routes.size()) this.routes.put(address,
-		// routes);
-		Set<RouteInfo> currentInfos = this.routes.get(address);
-		currentInfos.addAll(routes);
-		this.routes.put(address, currentInfos);
+		try {
+			routingPlugin.updateRouting(address, routes);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
-		if (!accessPointsMap.containsKey(address))
-			accessPointsMap.put(address, numberOfHops);
-		if (accessPointsMap.get(address) > numberOfHops)
-			accessPointsMap.put(address, numberOfHops);
+		try {
+			routingPlugin.updateAccessPoint(address, numberOfHops);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-	
+
 	@Override
 	public synchronized void execute() throws Exception {
 		super.execute();
@@ -170,6 +172,31 @@ public class RoutingNodeComponent extends AbstractComponent {
 				connectRouting(address, connectionInfo.getCommunicationInboudPort(),
 						connectionInfo.getRoutingInboundPortURI());
 			}
+
+			getExecutorService(indexExecutor).execute(() -> {
+
+				try {
+					while (true) {
+
+						for (RoutingOutboundPort neighborBoundPort : routingPlugin.getRoutingTable().values()) {
+							for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
+								neighborBoundPort.updateAccessPoint(this.address, 1);
+								neighborBoundPort.updateRouting(entry.getKey(), entry.getValue());
+							}
+							// for the other known access points
+
+							for (Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
+
+								neighborBoundPort.updateAccessPoint(entry.getKey(), entry.getValue() + 1);
+							}
+							Thread.sleep(200L);
+
+						}
+					}
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			});
 
 		}
 

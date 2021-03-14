@@ -4,10 +4,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.Map.Entry;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
+import com.network.common.Message;
+import com.network.common.NetworkAddress;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
@@ -126,15 +129,16 @@ public class AccessPointComponent extends AbstractComponent {
 				while (true) {
 					for (RoutingOutboundPort neighborBoundPort : routingOutboundPorts.values()) {
 						for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
-
+							neighborBoundPort.updateAccessPoint(this.address, 1);
 							neighborBoundPort.updateRouting(entry.getKey(), entry.getValue());
 						}
-						neighborBoundPort.updateAccessPoint(address, 1);
+						// for the other known access points
+
 						for (Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
-							
+
 							neighborBoundPort.updateAccessPoint(entry.getKey(), entry.getValue() + 1);
 						}
-						
+
 					}
 					Thread.sleep(200L);
 				}
@@ -144,8 +148,14 @@ public class AccessPointComponent extends AbstractComponent {
 			}
 
 		});
-//		 registrationOutboundPort.unregister(address);
+		// uncomment this to test unregister
+//		registrationOutboundPort.unregister(address);
 
+//		terminalNodeRegistrationOutboundPort.unregister(address);
+//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
+//		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
+//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
+//		transmitMessage(message);
 		super.execute();
 	}
 
@@ -181,7 +191,6 @@ public class AccessPointComponent extends AbstractComponent {
 		 * When it's called, it should connect with the calling node to achieve a peer
 		 * to peer connection
 		 **/
-		System.out.println("FROM ACCESS POINT: CONNECT METHOD IS INVOKED");
 		try {
 			if (communicationConnectionPorts.containsKey(address))
 				return;
@@ -193,7 +202,7 @@ public class AccessPointComponent extends AbstractComponent {
 			doPortConnection(port.getPortURI(), communicationInboudURI,
 					CommunicationConnector.class.getCanonicalName());
 			communicationConnectionPorts.put(address, port);
-			System.out.println("ACCESS POINT: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE");
+			System.out.println("ACCESS POINT: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE  " + address);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -264,6 +273,8 @@ public class AccessPointComponent extends AbstractComponent {
 				System.out.println("ACCESS POINT HAS  ROUTE FOR THE CURREN NODE ADDRESS");
 				sendingPort.transmitMessage(m);
 			}
+			
+			
 			// inondation
 			else {
 				System.out.println("ACCESS POINT NO ENTRY FOR THE CURRENT ADDRESS");
@@ -286,22 +297,9 @@ public class AccessPointComponent extends AbstractComponent {
 		/**
 		 * should ask for all neighbors if they have a route for that address
 		 */
-		try {
-			int min = -1;
-			for (Entry<NodeAddressI, CommunicationOutBoundPort> e : communicationConnectionPorts.entrySet()) {
-				int tmp = e.getValue().hasRouteFor(address);
-				if (min == -1 || (tmp >= 0 && tmp < min)) {
-					min = tmp;
-					sendingAddressI = e.getKey();
-				}
-
-			}
-
-			return min >= 0 ? min + 1 : -1;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return -1;
-		}
+		System.out.println("ACCESS POINT HAS OOO" + address);
+		if (communicationConnectionPorts.containsKey(address)) return 1;
+		return -1;
 	}
 
 	void ping() {

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
+import com.network.common.NetworkAddress;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
@@ -125,7 +126,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 					}
 					
 					
-					Thread.sleep(2000L);
+					Thread.sleep(200L);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -135,7 +136,13 @@ public class RoutingNodeComponent extends AbstractComponent {
 				}
 			}
 		});
-		// routingNodeRegistrationOutboundPort.unregister(nodeAddress);
+		// uncomment this to test unregister
+//		routingNodeRegistrationOutboundPort.unregister(nodeAddress);
+//		terminalNodeRegistrationOutboundPort.unregister(address);
+//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
+//		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
+//		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
+//		transmitMessage(message);
 
 	}
 
@@ -251,35 +258,43 @@ public class RoutingNodeComponent extends AbstractComponent {
 			return;
 		}
 
-		CommunicationOutBoundPort sendingPort = communicationConnectionPorts.get(m.getAddress());
-		m.decrementHops();
-		try {
-			if (sendingPort != null) {
-				System.out.println("ROUTING NODE HAS AN ENTRY FOR THE CURRENT ADDRESS");
-				if (m.getAddress() instanceof NetworkAddressI) {
-					NodeAddressI closestAccessPoint = getClosestAccessPoint();
-					if (closestAccessPoint == null) {
-						System.err.println("NO ACCESS POINT TO BE FOUND!");
-						return;
-					}
-					communicationConnectionPorts.get(closestAccessPoint).transmitMessage(m);
-				} else {
-					sendingPort.transmitMessage(m);
-				}
-			} else {
-				System.out.println("Inondation");
-				for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
-					if (N == 0)
-						break;
-					port.transmitMessage(m);
-					N--;
-				}
-			}
 
-		} catch (Exception e) {
+		
+		try {
+			
+			if(m.getAddress() instanceof NetworkAddressI) {
+				System.out.println("ROUTING NODE HAS RECEIVED A NETWORK ADDRESS, REDIRECTING TO AN ACCESS POINT");
+				NodeAddressI closestAccessPoint = getClosestAccessPoint();
+				if (closestAccessPoint == null) {
+					System.err.println("NO ACCESS POINT TO BE FOUND!");
+					return;
+				}
+				communicationConnectionPorts.get(closestAccessPoint).transmitMessage(m);
+				
+			}
+			
+			CommunicationOutBoundPort sendingPort = communicationConnectionPorts.get(m.getAddress());
+			m.decrementHops();
+			if(sendingPort != null) {
+				System.out.println("ROUTING NODE HAS AN ENTRY FOR THE DISTINATION");
+				sendingPort.transmitMessage(m);
+				
+			}else {
+				System.out.println("ROUTING NODE PROCEEDING WITH MESSAGE PROPAGATION");
+				
+				 int n = 3;
+				 for(CommunicationOutBoundPort port: communicationConnectionPorts.values()) {
+					 if (n==0) return;
+					 port.transmitMessage(m);
+					 n--;
+				 }
+			}
+		}catch (Exception e) {
 			// TODO: handle exception
 		}
-
+		
+		
+		
 	}
 
 	int hasRouteFor(AddressI address) {
@@ -298,7 +313,6 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
 		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ROUTING");
-		System.out.println(address.toString());
 		if (!this.routes.containsKey(address))
 			this.routes.put(address, routes);
 	
@@ -309,7 +323,6 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
 		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ACCESS POINT");
-		System.out.println(address.toString());
 		if (!accessPointsMap.containsKey(address))
 			accessPointsMap.put(address, numberOfHops);
 		if (accessPointsMap.get(address) > numberOfHops)

@@ -56,13 +56,13 @@ public class AccessPointCommunicationInbountPort extends AbstractInboundPort imp
 
 	@Override
 	public int hasRouteFor(AddressI address) throws Exception {
-		return getOwner().handleRequest(c -> ((CommunicationCI) c).hasRouteFor(address));
+		return getOwner().handleRequest(c -> ((AccessPointComponent) c).hasRouteFor(address));
 	}
 
 	@Override
 	public void ping() throws Exception {
 		getOwner().handleRequest(c -> {
-			((CommunicationCI) c).ping();
+			((AccessPointComponent) c).ping();
 			return null;
 		});
 
