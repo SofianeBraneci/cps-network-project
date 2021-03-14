@@ -20,6 +20,11 @@ public class CVM extends AbstractCVM{
 		
 		AbstractComponent.createComponent(RegisterComponent.class.getCanonicalName(), new Object[]{});
 		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+		AbstractComponent.createComponent(AccessPointComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});
+
 		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.2"), new Position(3, 2), 2000.0});
 		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.4"), new Position(3, 2), 2000.0});
 		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),	new Object[] {new NodeAddress("192.168.25.3"), new Position(3, 2), 2000.0});

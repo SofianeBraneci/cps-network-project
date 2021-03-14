@@ -1,6 +1,8 @@
 package com.network.plugins;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,10 +27,11 @@ public class RoutingPlugin extends AbstractPlugin {
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
 	private Map<NodeAddressI, Integer> accessPointsMap;
 
-	public RoutingPlugin(Map<NodeAddressI, Integer> accessPointsMap, Map<NodeAddressI, Set<RouteInfo>> routes) {
+	public RoutingPlugin(Map<NodeAddressI, Integer> accessPointsMap, Map<NodeAddressI, Set<RouteInfo>> routes, Map<NodeAddressI, RoutingOutboundPort> routingTable) {
 		super();
 		this.accessPointsMap = accessPointsMap;
 		this.routes = routes;
+		this.routingTable = routingTable;
 	}
 
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) throws Exception {
@@ -45,6 +48,7 @@ public class RoutingPlugin extends AbstractPlugin {
 	}
 
 	public void updateAccessPoint(NodeAddressI address, int numberOfHops) throws Exception {
+		System.out.println("ROUTING NODE IS UPDATING ACCESS POINTS");
 		if (!accessPointsMap.containsKey(address))
 			accessPointsMap.put(address, numberOfHops);
 		if (accessPointsMap.get(address) > numberOfHops)
@@ -52,8 +56,8 @@ public class RoutingPlugin extends AbstractPlugin {
 
 	}
 
-	public Map<NodeAddressI, RoutingOutboundPort> getRoutingTable() {
-		return routingTable;
+	public Collection<RoutingOutboundPort> getRoutingTable() {
+		return routingTable.values();
 
 	}
 	
@@ -79,7 +83,12 @@ public class RoutingPlugin extends AbstractPlugin {
 			// sending all the entries contained in the current routing table to it's new
 			// neighbor
 			routingTable.put(address, port);
-			System.out.println("A new entry was added to the routing table");
+			Set<RouteInfo> routeInfos = new HashSet<>();
+			RouteInfo info = new RouteInfo(address, 1);
+			routeInfos.add(info);
+			routes.put(address, routeInfos);
+
+			System.out.println("A new entry was added to the routing table" + routingTable.size());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -103,16 +112,17 @@ public class RoutingPlugin extends AbstractPlugin {
 		addRequiredInterface(RoutingCI.class);
 		routingInboundPortPlugin = new RoutingInboundPortPlugin(getOwner(), getPluginURI());
 		routingInboundPortPlugin.publishPort();
-		routingTable = new HashMap<>();
+		
 
 	}
 
 	@Override
 	public void finalise() throws Exception {
 		// TODO Auto-generated method stub
-		super.finalise();
+		
 		for (RoutingOutboundPort port : routingTable.values())
 			getOwner().doPortDisconnection(port.getPortURI());
+		super.finalise();
 	}
 
 	@Override
@@ -121,7 +131,6 @@ public class RoutingPlugin extends AbstractPlugin {
 		routingInboundPortPlugin.unpublishPort();
 		for (RoutingOutboundPort port : routingTable.values()) {
 			port.unpublishPort();
-			port.destroyPort();
 
 		}
 	}

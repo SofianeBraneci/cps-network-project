@@ -24,16 +24,19 @@ public class RoutingNodeComponent extends AbstractComponent {
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
 
 	private Map<NodeAddressI, Integer> accessPointsMap;
-
+	
+	private Map<NodeAddressI, RoutingOutboundPort> routingTableMap;
+	
 	private NodeAddressI address, sendingAddressI;
 	private PositionI initialPosition;
 	private double initialRange;
 	private CommunicationPlugin communicationPlugin;
 	private RoutingPlugin routingPlugin;
 	private NodesRegistrationPlugin nodesRegistrationPlugin;
-	private final String COMMUNICATION_PLUGIN_URI = "ROUTINF_COMMUNICATION_PLUGIN_URI";
+	private final String COMMUNICATION_PLUGIN_URI = "ROUTING_COMMUNICATION_PLUGIN_URI";
 	private final String ROUTING_PLUGIN_URI = "ROUTING_NODE_ROUTING_PLUGIN_URI";
 	private final String REGISTRATION_PLUGING_URI = "REGISTRATION_PLUGING_URI";
+	
 	private int indexExecutor;
 
 	protected RoutingNodeComponent(NodeAddressI address, PositionI initiaPosition, double initialRange)
@@ -45,12 +48,13 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 		this.routes = new HashMap<>();
 		this.accessPointsMap = new HashMap<>();
+		this.routingTableMap = new HashMap<NodeAddressI, RoutingOutboundPort>();
 
 		this.communicationPlugin = new CommunicationPlugin(address, accessPointsMap);
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes);
+		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes, routingTableMap);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
 
@@ -68,12 +72,13 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.initialRange = 120;
 		this.routes = new HashMap<>();
 		this.accessPointsMap = new HashMap<>();
+		this.routingTableMap = new HashMap<NodeAddressI, RoutingOutboundPort>();
 
 		this.communicationPlugin = new CommunicationPlugin(address, null);
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes);
+		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes, routingTableMap);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
 
@@ -115,6 +120,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI) {
 		communicationPlugin.connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 		routingPlugin.addEntryTotheTable(address, routingInboudPortURI);
+		System.out.println(routingTableMap.size());
 	}
 
 	NodeAddressI getClosestAccessPoint() {
@@ -177,10 +183,8 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 				try {
 					while (true) {
-
-						for (RoutingOutboundPort neighborBoundPort : routingPlugin.getRoutingTable().values()) {
+						for (RoutingOutboundPort neighborBoundPort : routingTableMap.values()) {
 							for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
-								neighborBoundPort.updateAccessPoint(this.address, 1);
 								neighborBoundPort.updateRouting(entry.getKey(), entry.getValue());
 							}
 							// for the other known access points

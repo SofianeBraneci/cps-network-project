@@ -199,10 +199,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 		// uncomment a message to test the seen or the unregister
 //		terminalNodeRegistrationOutboundPort.unregister(address);
-//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5);
+//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 0);
 //		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
-//		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
-//		transmitMessage(message);
+		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
+		transmitMessage(message);
 		super.execute();
 
 	}

@@ -32,12 +32,14 @@ public class AccessPointComponent extends AbstractComponent {
 	private double initialRange;
 	private CommunicationPlugin communicationPlugin;
 	private RoutingPlugin routingPlugin;
-	private NodesRegistrationPlugin  nodesRegistrationPlugin;
+	private NodesRegistrationPlugin nodesRegistrationPlugin;
 	private final String REGISTRATION_PLUGIN_URI = "REGISTRATION_PLUGIN_URI";
 	private final String COMMUNICATION_PLUGIN_URI = "COMMUNICATION_PLUGIN_URI";
 	private final String ROUTING_PLUGIN_URI = "ROUTING_PLUGIN_URI";
 	private Map<NodeAddressI, Set<RouteInfo>> routes;
 	private Map<NodeAddressI, Integer> accessPointsMap;
+	private Map<NodeAddressI, RoutingOutboundPort> routingTableMap;
+	private int executorIndex;
 
 	protected AccessPointComponent(NodeAddressI address, PositionI initialPosition, double initialRange)
 			throws Exception {
@@ -52,14 +54,14 @@ public class AccessPointComponent extends AbstractComponent {
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin(accessPointsMap,routes);
+		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes, routingTableMap);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
-		
+
 		this.nodesRegistrationPlugin = new NodesRegistrationPlugin();
 		this.nodesRegistrationPlugin.setPluginURI(REGISTRATION_PLUGIN_URI);
 		this.installPlugin(nodesRegistrationPlugin);
-		
+		this.executorIndex = createNewExecutorService("ACCESS POINT EXECUTOR SERVICE", 1, false);
 
 	}
 
@@ -75,10 +77,9 @@ public class AccessPointComponent extends AbstractComponent {
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
 		this.installPlugin(communicationPlugin);
 
-		this.routingPlugin = new RoutingPlugin(accessPointsMap, null);
+		this.routingPlugin = new RoutingPlugin(accessPointsMap, routes, routingTableMap);
 		this.routingPlugin.setPluginURI(ROUTING_PLUGIN_URI);
 		this.installPlugin(routingPlugin);
-
 
 	}
 
@@ -100,11 +101,11 @@ public class AccessPointComponent extends AbstractComponent {
 			}
 
 		}
-
 		
-		
-	}
 	
+
+	}
+
 	void connect(NodeAddressI address, String communicationInboudURI) {
 //		logMessage(this + "");
 //		logMessage("FROM ACCESS POINT NODE, CONNECTION WAS INVOKED !!!!! " + communicationInboudURI);
