@@ -48,6 +48,7 @@ public class AccessPointComponent extends AbstractComponent {
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
 		this.accessPointsMap = new HashMap<NodeAddressI, Integer>();
+		routingTableMap = new HashMap<NodeAddressI, RoutingOutboundPort>();
 		this.routes = new HashMap<>();
 
 		this.communicationPlugin = new CommunicationPlugin(address, accessPointsMap);
@@ -72,6 +73,7 @@ public class AccessPointComponent extends AbstractComponent {
 		this.initialPosition = new Position(12, 23);
 		this.initialRange = 120;
 		this.accessPointsMap = new HashMap<NodeAddressI, Integer>();
+		routingTableMap = new HashMap<NodeAddressI, RoutingOutboundPort>();
 		this.routes = new HashMap<>();
 		this.communicationPlugin = new CommunicationPlugin(address, accessPointsMap);
 		this.communicationPlugin.setPluginURI(COMMUNICATION_PLUGIN_URI);
