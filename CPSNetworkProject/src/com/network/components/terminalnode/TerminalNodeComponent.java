@@ -100,14 +100,14 @@ public class TerminalNodeComponent extends AbstractComponent {
 	 * @param address node to connect with address
 	 * @param communicationInboundPortURI node to connect with communication inbound port uri
 	 */
-	void connect(NodeAddressI address, String communicationInboudURI) {
+	void connect(NodeAddressI address, String communicationInboundURI) {
 		try {
 			if (communicationConnections.containsKey(address))
 				return;
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
 
-			doPortConnection(port.getPortURI(), communicationInboudURI,
+			doPortConnection(port.getPortURI(), communicationInboundURI,
 					CommunicationConnector.class.getCanonicalName());
 			//
 			communicationConnections.put(address, port);
@@ -116,9 +116,12 @@ public class TerminalNodeComponent extends AbstractComponent {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
+	void connectRouting(NodeAddressI address, String communicationInboundPort, String routingInboundPort) {
+	//Nothing to do
+	}
+	
 	/**
 	 * Transmit a message
 	 * @param m the message
