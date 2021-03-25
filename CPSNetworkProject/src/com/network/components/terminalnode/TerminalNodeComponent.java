@@ -218,9 +218,9 @@ public class TerminalNodeComponent extends AbstractComponent {
 //		terminalNodeRegistrationOutboundPort.unregister(address);
 		
 		// uncomment to test message sending
-		//Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 55);
+		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 55);
 //		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
-		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
+//		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
 		transmitMessage(message);
 
 		super.execute();
