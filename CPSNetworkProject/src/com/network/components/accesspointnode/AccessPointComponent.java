@@ -1,13 +1,14 @@
 package com.network.components.accesspointnode;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map.Entry;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
+import com.network.common.Message;
 import com.network.common.NodeAddress;
 import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
@@ -60,7 +61,8 @@ public class AccessPointComponent extends AbstractComponent {
 	/** the access point initial range */
 	private double initialRange;
 	/** the access point executor service index */
-	private int executorServiceIndex;
+	private int executorServiceIndexCommunication;
+	private int executorServiceIndexRoutage;
 
 	/**
 	 * create and initialize access points
@@ -76,10 +78,10 @@ public class AccessPointComponent extends AbstractComponent {
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
 
-		this.communicationConnectionPorts = new HashMap<>();
-		this.routingOutboundPorts = new HashMap<>();
-		this.routes = new HashMap<>();
-		this.accessPointsMap = new HashMap<>();
+		this.communicationConnectionPorts = new ConcurrentHashMap<>();
+		this.routingOutboundPorts = new ConcurrentHashMap<>();
+		this.routes = new ConcurrentHashMap<>();
+		this.accessPointsMap = new ConcurrentHashMap<>();
 
 		this.accessPointCommunicationInboundPort = new AccessPointCommunicationInboundPort(this);
 		this.accessPointRoutingInboundPort = new AccessPointRoutingInboundPort(this);
@@ -88,7 +90,9 @@ public class AccessPointComponent extends AbstractComponent {
 		this.accessPointCommunicationInboundPort.publishPort();
 		this.accessPointRoutingInboundPort.publishPort();
 		this.registrationOutboundPort.publishPort();
-		this.executorServiceIndex = createNewExecutorService("ACCESS POINT EXECUTOR SERVICE URI", 1, false);
+		this.executorServiceIndexRoutage = createNewExecutorService("ROUTING ACCESS POINT EXECUTOR SERVICE URI", 10, false);
+		this.executorServiceIndexCommunication = createNewExecutorService("COMMUNICATION ACCESS POINT EXECUTOR SERVICE URI", 10, false);
+
 
 	}
 	/**
@@ -102,10 +106,10 @@ public class AccessPointComponent extends AbstractComponent {
 		this.initialPosition = new Position(12, 23);
 		this.initialRange = 120;
 
-		this.communicationConnectionPorts = new HashMap<>();
-		this.routingOutboundPorts = new HashMap<>();
-		this.routes = new HashMap<>();
-		this.accessPointsMap = new HashMap<>();
+		this.communicationConnectionPorts = new ConcurrentHashMap<>();
+		this.routingOutboundPorts = new ConcurrentHashMap<>();
+		this.routes = new ConcurrentHashMap<>();
+		this.accessPointsMap = new ConcurrentHashMap<>();
 
 		this.accessPointCommunicationInboundPort = new AccessPointCommunicationInboundPort(this);
 		this.accessPointRoutingInboundPort = new AccessPointRoutingInboundPort(this);
@@ -114,6 +118,9 @@ public class AccessPointComponent extends AbstractComponent {
 		this.accessPointCommunicationInboundPort.publishPort();
 		this.accessPointRoutingInboundPort.publishPort();
 		this.registrationOutboundPort.publishPort();
+
+		this.executorServiceIndexRoutage = createNewExecutorService("ROUTING ACCESS POINT EXECUTOR SERVICE URI", 10, false);
+		this.executorServiceIndexCommunication = createNewExecutorService("COMMUNICATION ACCESS POINT EXECUTOR SERVICE URI", 10, false);
 		;
 	}
 
@@ -129,15 +136,16 @@ public class AccessPointComponent extends AbstractComponent {
 		System.out.println("Access Point node connections = " + connectionInfos.size());
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-
-			this.connectRouting(address, connectionInfo.getCommunicationInboudPort(),
-					connectionInfo.getRoutingInboundPortURI());
+			getExecutorService(executorServiceIndexCommunication).execute(() -> {
+				this.connectRouting(address, connectionInfo.getCommunicationInboudPort(),
+						connectionInfo.getRoutingInboundPortURI());
+				});
 
 		}
 
 		// dynamically propagate the routing table to it's neighbors
 
-		getExecutorService(executorServiceIndex).execute(() -> {
+		getExecutorService(executorServiceIndexRoutage).execute(() -> {
 			try {
 				while (true) {
 					for (RoutingOutboundPort neighborBoundPort : routingOutboundPorts.values()) {
@@ -171,11 +179,15 @@ public class AccessPointComponent extends AbstractComponent {
 /*		
  		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
 		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
+
 		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
 		
 		transmitMessage(message);
- */
-		
+
+		getExecutorService(executorServiceIndexCommunication).execute(()->{
+			transmitMessage(message);
+		});
+*/
 		super.execute();
 	}
 
@@ -211,7 +223,7 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param address terminal node to connect with address
 	 * @param communicationInboundPortURI terminal node to connect with communication inbound port uri
 	 */
-	void connect(NodeAddressI address, String communicationInboundPortURI) {
+	public void connect(NodeAddressI address, String communicationInboundPortURI) {
 		try {
 			if (communicationConnectionPorts.containsKey(address))
 				return;
@@ -237,7 +249,7 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param communicationInboudPortURI routing node to connect with communication inbound port uri
 	 * @param routingInboudPortURI routing node to connect with routing inbound port uri
 	 */
-	void connectRouting(NodeAddressI address, String communicationInboundPortURI, String routingInboundPortURI) {
+	public void connectRouting(NodeAddressI address, String communicationInboundPortURI, String routingInboundPortURI) {
 
 		try {
 			if (communicationConnectionPorts.containsKey(address)) {
@@ -275,9 +287,7 @@ public class AccessPointComponent extends AbstractComponent {
 	 * Transmit a message
 	 * @param m the message
 	 */
-	void transmitMessage(MessageI m) {
-		
-
+	public void transmitMessage(MessageI m) {
 		int N = 3;
 		try {
 			// Check if it has a route to message's address and send it via that port
@@ -341,7 +351,7 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param address address of the routing node to add
 	 * @param routes routes info
 	 */
-	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
+	public synchronized void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
 		if (this.address.equals(address))
 			return;
 		if (!this.routes.containsKey(address))
@@ -360,7 +370,7 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param address address of the routing node to add
 	 * @param numberOfHops the new number of hops
 	 */
-	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
+	public synchronized void updateAccessPoint(NodeAddressI address, int numberOfHops) {
 		if (this.address.equals(address))
 			return;
 		if (!accessPointsMap.containsKey(address))

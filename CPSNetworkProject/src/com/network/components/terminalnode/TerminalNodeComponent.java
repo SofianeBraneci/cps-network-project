@@ -1,9 +1,9 @@
 package com.network.components.terminalnode;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
@@ -49,6 +49,9 @@ public class TerminalNodeComponent extends AbstractComponent {
 	private Map<NodeAddressI, CommunicationOutBoundPort> communicationConnections;
 	/** address to send a message to*/
 	private NodeAddressI sendingAddressI = null;
+	/** the terminal node executor services indexes */
+	private int executorServiceIndexConnection;
+	private int executorServiceIndexMessage;
 
 	/**
 	 * create and initialize terminal node
@@ -62,7 +65,9 @@ public class TerminalNodeComponent extends AbstractComponent {
 		this.address = address;
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
-		this.communicationConnections = new HashMap<>();
+		this.communicationConnections = new ConcurrentHashMap<>();
+		this.executorServiceIndexConnection = createNewExecutorService("TERMINAL NODE EXECUTOR SERVICE URI FOR CONNECTION", 10, false);
+		this.executorServiceIndexConnection = createNewExecutorService("TERMINAL NODE EXECUTOR SERVICE URI FOR MESSAGE SENDING", 10, false);
 
 		try {
 			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
@@ -84,7 +89,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 		this.address = new NodeAddress("Some IP");
 		this.initialPosition = new Position(1, 2);
 		this.initialRange = 200;
-		this.communicationConnections = new HashMap<>();
+		this.communicationConnections = new ConcurrentHashMap<>();
+		this.executorServiceIndexConnection = createNewExecutorService("TERMINAL NODE EXECUTOR SERVICE URI FOR CONNECTION", 10, false);
+		this.executorServiceIndexConnection = createNewExecutorService("TERMINAL NODE EXECUTOR SERVICE URI FOR MESSAGE SENDING", 10, false);
+		
 		try {
 			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
 			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(this);
@@ -111,7 +119,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 			doPortConnection(port.getPortURI(), communicationInboundURI,
 					CommunicationConnector.class.getCanonicalName());
-			//
+			
 			communicationConnections.put(address, port);
 			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
 			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED : " + address);
@@ -196,7 +204,6 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 	@Override
 	public synchronized void execute() throws Exception {
-
 		// do a port connection with the register
 		// registration work perfectly
 		doPortConnection(terminalNodeRegistrationOutboundPort.getPortURI(), RegisterComponent.REGISTER_INBOUND_PORT_URI,
@@ -209,9 +216,11 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 		// connect with them
 		System.out.println("TERMINAL NODE connection size = " + connectionInfos.size());
+	
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-			connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
-
+			getExecutorService(executorServiceIndexConnection).execute(() ->{
+				connect(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
+			});
 		}
 
 		// uncomment to test nregister
@@ -221,8 +230,9 @@ public class TerminalNodeComponent extends AbstractComponent {
 		//Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 55);
 //		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
 		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
-		transmitMessage(message);
-
+		getExecutorService(executorServiceIndexMessage).execute(()->{
+			transmitMessage(message);
+		});
 		super.execute();
 
 	}
