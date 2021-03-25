@@ -6,6 +6,7 @@ import com.network.interfaces.MessageI;
 import com.network.interfaces.NodeAddressI;
 
 import fr.sorbonne_u.components.ComponentI;
+import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 
 /**
@@ -14,7 +15,7 @@ import fr.sorbonne_u.components.ports.AbstractOutboundPort;
  * @author Softwarkers
  *
  */
-public class RoutingNodeCommunicationInboundPort extends AbstractOutboundPort implements CommunicationCI {
+public class RoutingNodeCommunicationInboundPort extends AbstractInboundPort implements CommunicationCI {
 
 	private static final long serialVersionUID = 1L;
 
