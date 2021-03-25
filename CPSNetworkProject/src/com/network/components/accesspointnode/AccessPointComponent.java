@@ -137,7 +137,7 @@ public class AccessPointComponent extends AbstractComponent {
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 			getExecutorService(executorServiceIndexCommunication).execute(() -> {
-				this.connectRouting(address, connectionInfo.getCommunicationInboudPort(),
+				this.connectRouting(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
 						connectionInfo.getRoutingInboundPortURI());
 				});
 
