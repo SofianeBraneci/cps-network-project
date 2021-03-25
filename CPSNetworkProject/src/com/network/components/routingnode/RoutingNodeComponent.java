@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
@@ -60,7 +61,9 @@ public class RoutingNodeComponent extends AbstractComponent {
 	/** the routing node initial range */
 	private double initialRange;
 	/** the routing node executor index */
-	private int executorIndex;
+	private int routingExecutorServiceIndex;
+	private int communicationExecutorServiceIndex;
+	
 
 	/**
 	 * create and initialize routing node
@@ -76,10 +79,10 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.initialPosition = initiaPosition;
 		this.initialRange = initialRange;
 
-		this.routes = new HashMap<>();
-		this.accessPointsMap = new HashMap<>();
-		this.communicationConnectionPorts = new HashMap<>();
-		this.routingOutboundPorts = new HashMap<>();
+		this.routes = new ConcurrentHashMap<>();
+		this.accessPointsMap = new ConcurrentHashMap<>();
+		this.communicationConnectionPorts = new ConcurrentHashMap<>();
+		this.routingOutboundPorts = new ConcurrentHashMap<>();
 
 		this.routingNodeCommunicationInboundPort = new RoutingNodeCommunicationInboundPort(this);
 		this.routingNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
@@ -88,7 +91,9 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.routingNodeCommunicationInboundPort.publishPort();
 		this.routingNodeRegistrationOutboundPort.publishPort();
 		this.routingInboundPort.publishPort();
-		this.executorIndex = createNewExecutorService("ROUTING NODE EXECUTOR SERVICE", 1, false);
+		this.routingExecutorServiceIndex = createNewExecutorService("ROUTING NODE ROUITNG EXECUTOR SERVICE", 10, false);
+		this.communicationExecutorServiceIndex = createNewExecutorService("ROUTING NODE COMMUNICATION EXECUTOR SERIVCE", 10, false);
+		
 	}
 	
 	/**
@@ -102,9 +107,9 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.initialPosition = new Position(12, 23);
 		this.initialRange = 120;
 		this.routes = new HashMap<>();
-		this.accessPointsMap = new HashMap<>();
-		this.communicationConnectionPorts = new HashMap<>();
-		this.routingOutboundPorts = new HashMap<>();
+		this.accessPointsMap = new ConcurrentHashMap<>();
+		this.communicationConnectionPorts = new ConcurrentHashMap<>();
+		this.routingOutboundPorts = new ConcurrentHashMap<>();
 
 		this.routingNodeCommunicationInboundPort = new RoutingNodeCommunicationInboundPort(this);
 		this.routingNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
@@ -113,6 +118,10 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.routingNodeCommunicationInboundPort.publishPort();
 		this.routingNodeRegistrationOutboundPort.publishPort();
 		this.routingInboundPort.publishPort();
+		
+		this.routingExecutorServiceIndex = createNewExecutorService("ROUTING NODE EXECUTOR SERVICE", 10, false);
+		this.communicationExecutorServiceIndex = createNewExecutorService("ROUTING NODE COMMUNICATION EXECUTOR SERIVCE", 10, false);
+		
 	}
 
 	@Override
@@ -126,33 +135,39 @@ public class RoutingNodeComponent extends AbstractComponent {
 				routingInboundPort.getPortURI());
 		System.out.println("ROUTING NODE CONNECTIONS = " + connectionInfos.size());
 
-		for (ConnectionInfo connectionInfo : connectionInfos) {
-			this.connectRouting(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
-					connectionInfo.getRoutingInboundPortURI());
-		}
-		getExecutorService(executorIndex).execute(() -> {
-			while(true) {
-				try {
-					
-					for(RoutingOutboundPort neighboroOutboundPort: routingOutboundPorts.values()) {
-						for(Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
-							neighboroOutboundPort.updateRouting(entry.getKey(), entry.getValue());
-						}
-						
-						for(Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
-							neighboroOutboundPort.updateAccessPoint(entry.getKey(), entry.getValue() + 1);
-						}
-					}
-					
-					
-					Thread.sleep(200L);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+//		for (ConnectionInfo connectionInfo : connectionInfos) {
+//			// connecting to the neighbors in a parallel mode
+//			getExecutorService(communicationExecutorServiceIndex).execute(()->{
+//				
+//				this.connectRouting(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
+//						connectionInfo.getRoutingInboundPortURI());
+//				
+//			});
+//		}
+//		// propagating the routing table
+//		getExecutorService(routingExecutorServiceIndex).execute(() -> {
+//			while(true) {
+//				try {
+//					
+//					for(RoutingOutboundPort neighboroOutboundPort: routingOutboundPorts.values()) {
+//						for(Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
+//							neighboroOutboundPort.updateRouting(entry.getKey(), entry.getValue());
+//						}
+//						
+//						for(Entry<NodeAddressI, Integer> entry : accessPointsMap.entrySet()) {
+//							neighboroOutboundPort.updateAccessPoint(entry.getKey(), entry.getValue() + 1);
+//						}
+//					}
+//					
+//					
+//					Thread.sleep(200L);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
 		
 		// uncomment this to test unregister
 /*
@@ -166,7 +181,13 @@ public class RoutingNodeComponent extends AbstractComponent {
 		Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
 		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
 		transmitMessage(message);
+		// for sending multiple messages just add them to the executor service
+		getExecutorService(communicationExecutorServiceIndex).execute(()->{
+		transmitMessage(m);
+	};
+		
 */
+	
 	}
 
 	@Override
@@ -349,7 +370,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 * @param address address of the routing node to add
 	 * @param routes routes info
 	 */
-	void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
+	synchronized void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
 		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ROUTING");
 		if (!this.routes.containsKey(address))
 			this.routes.put(address, routes);
@@ -364,7 +385,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 * @param address address of the routing node to add
 	 * @param numberOfHops the new number of hops
 	 */
-	void updateAccessPoint(NodeAddressI address, int numberOfHops) {
+	synchronized void updateAccessPoint(NodeAddressI address, int numberOfHops) {
 		System.out.println("A NEW ENTRY WAS RECEIVED----ROUTING NODE-----: UPDATE ACCESS POINT");
 		if (!accessPointsMap.containsKey(address))
 			accessPointsMap.put(address, numberOfHops);
