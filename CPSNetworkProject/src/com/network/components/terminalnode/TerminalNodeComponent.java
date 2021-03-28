@@ -227,7 +227,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 	void ping() throws ConnectException{
 		
-		if(isStillOn) return;
+		if(! isStillOn) 
 		throw new ConnectException("The node you are trying to ping is no longer ON");		
 
 	}
@@ -357,6 +357,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 	void unregister() {
 		try {
 			terminalNodeRegistrationOutboundPort.unregister(address);
+			isStillOn = false;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

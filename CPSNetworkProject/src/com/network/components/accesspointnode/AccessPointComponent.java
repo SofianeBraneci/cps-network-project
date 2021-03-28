@@ -265,6 +265,7 @@ public class AccessPointComponent extends AbstractComponent {
 
 	private void unregister() throws Exception {
 		registrationOutboundPort.unregister(address);
+		isStillOn = false;
 	}
 
 	void disconnectFromNeighbors() {
@@ -451,7 +452,8 @@ public class AccessPointComponent extends AbstractComponent {
 		return -1;
 	}
 
-	void ping() {
+	void ping() throws ConnectException {
+		if (!isStillOn) throw new ConnectException("The node you are trying to ping is no longer ON");
 	}
 
 	/**

@@ -505,11 +505,9 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	void ping() throws ConnectException {
 
-		if (isStillOn) {
-			return;
-		}
-		throw new ConnectException("The node you are trying to ping is no longer ON");
+		if (!isStillOn) throw new ConnectException("The node you are trying to ping is no longer ON");
 
+		
 	}
 
 	/**
@@ -545,6 +543,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	void unregister() {
 		try {
 			routingNodeRegistrationOutboundPort.unregister(nodeAddress);
+			isStillOn = false;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
