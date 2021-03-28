@@ -1,6 +1,5 @@
 package com.network.components.register;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -107,6 +106,7 @@ public class RegisterComponent extends AbstractComponent {
 
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
+		getExecutorService(exectutorIndex).shutdownNow();
 		try {
 			registerPort.unpublishPort();
 		} catch (Exception e) {

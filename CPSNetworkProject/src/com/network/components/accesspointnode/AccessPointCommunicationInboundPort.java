@@ -39,7 +39,6 @@ public class AccessPointCommunicationInboundPort extends AbstractInboundPort imp
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
 		getOwner().handleRequest(c -> {
-			System.err.println("Idfdsfsdt");
 			((AccessPointComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});

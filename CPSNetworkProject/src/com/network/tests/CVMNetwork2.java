@@ -37,7 +37,7 @@ public class CVMNetwork2 extends AbstractCVM {
 	public static void main(String[] args) {
 		try {
 			CVMNetwork2 c = new CVMNetwork2();
-			c.startStandardLifeCycle(50000L);
+			c.startStandardLifeCycle(5000L);
 			System.exit(0);
 		} catch (Exception e) {
 			// TODO: handle exception

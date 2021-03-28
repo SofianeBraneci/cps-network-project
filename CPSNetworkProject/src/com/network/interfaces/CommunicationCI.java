@@ -36,6 +36,7 @@ public interface  CommunicationCI extends  OfferedCI, RequiredCI {
 	 * @return -1 if no route
 	 */
 	int hasRouteFor(AddressI address) throws Exception;
+	
 	void ping() throws Exception;
 
 }
