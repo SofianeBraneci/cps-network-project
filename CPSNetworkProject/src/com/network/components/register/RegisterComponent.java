@@ -177,9 +177,14 @@ public class RegisterComponent extends AbstractComponent {
 					public Set<ConnectionInfo> call() throws Exception {
 						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition,
 								Double.POSITIVE_INFINITY, 2);
+						
 						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
+						
+						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
+						
 						accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(
 								communicationInboundPortURI, initialPosition, routingInboundPortURI));
+						
 						System.out.println("current access points table size : " + accessPointsNodesTable.size());
 						return neighbores;
 
@@ -216,16 +221,22 @@ public class RegisterComponent extends AbstractComponent {
 					public Set<ConnectionInfo> call() throws Exception {
 						// TODO Auto-generated method stub
 						System.out.println("REGISTERING A NEW ROUTING NODE IP: " + address);
+						
 						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 2);
+						
 						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
+						
+						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
+						
 						routingNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
 								initialPosition, routingInboundPortURI));
+						
 						System.out.println("current routing nodes table size : " + routingNodesTable.size());
 						return neighbores;
 
 					}
 				});
-		
+
 		try {
 			return futureNeighFuture.get();
 		} catch (InterruptedException | ExecutionException e) {

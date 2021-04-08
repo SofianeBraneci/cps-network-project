@@ -1,6 +1,7 @@
 package com.network.components.accesspointnode;
 
 import java.rmi.ConnectException;
+import java.security.DrbgParameters.NextBytes;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
@@ -150,10 +151,13 @@ public class AccessPointComponent extends AbstractComponent {
 		System.out.println("Access Point node connections = " + connectionInfos.size());
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
-			getExecutorService(executorServiceIndexCommunication).execute(() -> {
-				this.connectRouting(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
+			if (connectionInfo.isRouting()) {
+				connectWithRoutingNode(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
 						connectionInfo.getRoutingInboundPortURI());
-			});
+
+			}
+			else connectWithTerminalNode(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
+
 
 		}
 
@@ -178,7 +182,7 @@ public class AccessPointComponent extends AbstractComponent {
 
 			} catch (Exception e) {
 				// TODO: handle exception
-				if(!(e instanceof InterruptedException)) {
+				if (!(e instanceof InterruptedException)) {
 					e.printStackTrace();
 				}
 			}
@@ -249,7 +253,7 @@ public class AccessPointComponent extends AbstractComponent {
 		try {
 			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnectionPorts.entrySet()) {
 				currentNodeAddress = entry.getKey();
-				System.out.println("ACCESS POINT NODE: Pinging : " + currentNodeAddress );
+				System.out.println("ACCESS POINT NODE: Pinging : " + currentNodeAddress);
 
 				entry.getValue().ping();
 
@@ -263,9 +267,13 @@ public class AccessPointComponent extends AbstractComponent {
 		}
 	}
 
-	private void unregister() throws Exception {
-		registrationOutboundPort.unregister(address);
-		isStillOn = false;
+	private void unregister() {
+		try {
+			registrationOutboundPort.unregister(address);
+			isStillOn = false;
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 	}
 
 	void disconnectFromNeighbors() {
@@ -327,23 +335,76 @@ public class AccessPointComponent extends AbstractComponent {
 	 *                                    communication inbound port uri
 	 */
 	public void connect(NodeAddressI address, String communicationInboundPortURI) {
-		try {
-			if (communicationConnectionPorts.containsKey(address))
-				return;
+		getExecutorService(executorServiceIndexCommunication).execute(() -> {
+			try {
+				if (communicationConnectionPorts.containsKey(address))
+					return;
 
-			// we create a new outbound port for the new neighbor
+				// we create a new outbound port for the new neighbor
+				CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
+				port.publishPort();
+
+				doPortConnection(port.getPortURI(), communicationInboundPortURI,
+						CommunicationConnector.class.getCanonicalName());
+				communicationConnectionPorts.put(address, port);
+				System.out.println("ACCESS POINT: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE " + address);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		});
+	}
+
+	private void connectWithTerminalNode(NodeAddressI address, String communicationInboundPortURI) {
+		try {
+
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
-
 			doPortConnection(port.getPortURI(), communicationInboundPortURI,
 					CommunicationConnector.class.getCanonicalName());
+
+			port.connect(this.address, accessPointCommunicationInboundPort.getPortURI());
+
 			communicationConnectionPorts.put(address, port);
-			System.out.println("ACCESS POINT: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE " + address);
+
+			System.out.println("ACCESS POINT NODE: CONNECTED WITH A TERMINAL NODE");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+
+	private void connectWithRoutingNode(NodeAddressI address, String communicationInboundPortURI,
+			String routingInboundPortURI) {
+		try {
+
+			RoutingOutboundPort port = new RoutingOutboundPort(this);
+			port.publishPort();
+			doPortConnection(port.getPortURI(), routingInboundPortURI, RoutingConnector.class.getCanonicalName());
+
+			CommunicationOutBoundPort portC = new CommunicationOutBoundPort(this);
+			
+			portC.publishPort();
+			
+			doPortConnection(portC.getPortURI(), communicationInboundPortURI,
+					CommunicationConnector.class.getCanonicalName());
+
+			portC.connectRouting(this.address, accessPointCommunicationInboundPort.getPortURI(),
+					accessPointRoutingInboundPort.getPortURI());
+
+			communicationConnectionPorts.put(address, portC);
+			routingOutboundPorts.put(address, port);
+
+			Set<RouteInfo> routeInfos = new HashSet<>();
+			RouteInfo info = new RouteInfo(address, 1);
+			routeInfos.add(info);
+			routes.put(address, routeInfos);
+
+			System.out.println("ACCESS POINT NODE: CONNECTED A ROUITNG NODE");
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			// TODO: handle exception
 		}
-
 	}
 
 	/**
@@ -358,35 +419,40 @@ public class AccessPointComponent extends AbstractComponent {
 	 */
 	public void connectRouting(NodeAddressI address, String communicationInboundPortURI, String routingInboundPortURI) {
 
-		try {
-			if (communicationConnectionPorts.containsKey(address)) {
-				return;
+		getExecutorService(executorServiceIndexCommunication).execute(() -> {
+
+			try {
+				if (communicationConnectionPorts.containsKey(address)) {
+					return;
+				}
+
+				CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
+				port.publishPort();
+				RoutingOutboundPort routingOutboundPort = new RoutingOutboundPort(this);
+
+				routingOutboundPort.publishPort();
+
+				doPortConnection(routingOutboundPort.getPortURI(), routingInboundPortURI,
+						RoutingConnector.class.getCanonicalName());
+
+				doPortConnection(port.getPortURI(), communicationInboundPortURI,
+						CommunicationConnector.class.getCanonicalName());
+				communicationConnectionPorts.put(address, port);
+				routingOutboundPorts.put(address, routingOutboundPort);
+				System.out.println("ACCESS POINT : A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE : " + address);
+				Set<RouteInfo> routeInfos = new HashSet<>();
+				RouteInfo info = new RouteInfo(address, 1);
+				routeInfos.add(info);
+				routes.put(address, routeInfos);
+				System.out.println("ACCESS POINT: total neighbors  = " + communicationConnectionPorts.size()
+						+ ", routing neighbors = " + routes.size() + ", other access points = "
+						+ accessPointsMap.size());
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 
-			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
-			port.publishPort();
-			RoutingOutboundPort routingOutboundPort = new RoutingOutboundPort(this);
+		});
 
-			routingOutboundPort.publishPort();
-
-			doPortConnection(routingOutboundPort.getPortURI(), routingInboundPortURI,
-					RoutingConnector.class.getCanonicalName());
-
-			doPortConnection(port.getPortURI(), communicationInboundPortURI,
-					CommunicationConnector.class.getCanonicalName());
-
-			communicationConnectionPorts.put(address, port);
-			routingOutboundPorts.put(address, routingOutboundPort);
-			System.out.println("ACCESS POINT : A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE : " + address);
-			Set<RouteInfo> routeInfos = new HashSet<>();
-			RouteInfo info = new RouteInfo(address, 1);
-			routeInfos.add(info);
-			routes.put(address, routeInfos);
-			System.out.println("ACCESS POINT: total neighbors  = " + communicationConnectionPorts.size()
-					+ ", routing neighbors = " + routes.size() + ", other access points = " + accessPointsMap.size());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -453,7 +519,8 @@ public class AccessPointComponent extends AbstractComponent {
 	}
 
 	void ping() throws ConnectException {
-		if (!isStillOn) throw new ConnectException("The node you are trying to ping is no longer ON");
+		if (!isStillOn)
+			throw new ConnectException("The node you are trying to ping is no longer ON");
 	}
 
 	/**

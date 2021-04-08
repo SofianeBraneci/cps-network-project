@@ -36,6 +36,7 @@ public class NodeComponentInformationWrapper {
 	public NodeComponentInformationWrapper(String communicationInboundPortURI) {
 		super();
 		this.communicationInboundPortURI = communicationInboundPortURI;
+		this.routingInboundPortURI = null;
 	}
 
 	/**

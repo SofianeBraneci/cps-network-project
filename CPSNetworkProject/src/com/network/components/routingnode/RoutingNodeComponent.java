@@ -144,7 +144,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 		super.execute();
 		doPortConnection(routingNodeRegistrationOutboundPort.getPortURI(), RegisterComponent.REGISTER_INBOUND_PORT_URI,
 				RegistrationConnector.class.getCanonicalName());
-
+		
 		Set<ConnectionInfo> connectionInfos = routingNodeRegistrationOutboundPort.registerRoutigNode(nodeAddress,
 				routingNodeCommunicationInboundPort.getPortURI(), initialPosition, initialRange,
 				routingInboundPort.getPortURI());
@@ -156,10 +156,14 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 
-			this.connectRouting(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(),
-					connectionInfo.getRoutingInboundPortURI());
-
+			if(connectionInfo.isRouting()) {
+				connectWithRoutingNode(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(), connectionInfo.getRoutingInboundPortURI());
+			}
+			else {
+				connectWithTerminalNode(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
+			}
 		}
+		
 		// propagating the routing table
 //		getExecutorService(routingExecutorServiceIndex).execute(() -> {
 //			propagateRoutingTable();
@@ -192,7 +196,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				if(!(e instanceof InterruptedException)) {
+				if (!(e instanceof InterruptedException)) {
 					e.printStackTrace();
 				}
 			}
@@ -304,7 +308,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 */
 	void connect(NodeAddressI address, String communicationInboundURI) {
 
-		getExecutorService(connectionsExecutorServiceIndex).execute(() -> {
+	Future<?> future =  	getExecutorService(connectionsExecutorServiceIndex).submit(() -> {
 			System.out.println("FROM ROUTING NODE: CONNECT METHOD IS INVOKED" + address.toString());
 			try {
 				if (communicationConnectionPorts.containsKey(address))
@@ -322,6 +326,12 @@ public class RoutingNodeComponent extends AbstractComponent {
 				e.printStackTrace();
 			}
 		});
+	
+	try {
+		future.get();
+	} catch (Exception e2) {
+		// TODO: handle exception
+	}
 
 	}
 
@@ -335,9 +345,66 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 * @param routingInboudPortURI       routing node to connect with routing
 	 *                                   inbound port uri
 	 */
+	
+	
+	private void connectWithTerminalNode(NodeAddressI address, String communicationInboundPortURI) {
+		try {
+
+			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
+			port.publishPort();
+			doPortConnection(port.getPortURI(), communicationInboundPortURI,
+					CommunicationConnector.class.getCanonicalName());
+
+			port.connect(nodeAddress, routingNodeCommunicationInboundPort.getPortURI());
+
+			communicationConnectionPorts.put(address, port);
+
+			System.out.println("ACCESS POINT NODE: CONNECTED WITH A TERMINAL NODE");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+
+	private void connectWithRoutingNode(NodeAddressI address, String communicationInboundPortURI,
+			String routingInboundPortURI) {
+		try {
+
+			
+			RoutingOutboundPort port = new RoutingOutboundPort(this);
+			
+			port.publishPort();
+			
+			doPortConnection(port.getPortURI(), routingInboundPortURI, RoutingConnector.class.getCanonicalName());
+
+			CommunicationOutBoundPort portC = new CommunicationOutBoundPort(this);
+			
+			portC.publishPort();
+			
+			doPortConnection(portC.getPortURI(), communicationInboundPortURI,
+					CommunicationConnector.class.getCanonicalName());
+
+			portC.connectRouting(nodeAddress, routingNodeCommunicationInboundPort.getPortURI(),
+					routingInboundPort.getPortURI());
+
+			communicationConnectionPorts.put(address, portC);
+			routingOutboundPorts.put(address, port);
+
+			Set<RouteInfo> routeInfos = new HashSet<>();
+			RouteInfo info = new RouteInfo(address, 1);
+			routeInfos.add(info);
+			routes.put(address, routeInfos);
+
+			System.out.println("ACCESS POINT NODE: CONNECTED A ROUITNG NODE");
+
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+
+	
 	void connectRouting(NodeAddressI address, String communicationInboundPortURI, String routingInboudPortURI) {
 
-		getExecutorService(connectionsExecutorServiceIndex).execute(() -> {
+	Future<?> future = 	getExecutorService(connectionsExecutorServiceIndex).submit(() -> {
 			try {
 				if (communicationConnectionPorts.containsKey(address)) {
 					return;
@@ -353,7 +420,6 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 				doPortConnection(port.getPortURI(), communicationInboundPortURI,
 						CommunicationConnector.class.getCanonicalName());
-
 				communicationConnectionPorts.put(address, port);
 				routingOutboundPorts.put(address, routingOutboundPort);
 				System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE " + address);
@@ -369,6 +435,12 @@ public class RoutingNodeComponent extends AbstractComponent {
 			}
 
 		});
+	
+	try {
+		future.get();
+	} catch (Exception e2) {
+		// TODO: handle exception
+	}
 
 	}
 
@@ -394,7 +466,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 		try {
 			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnectionPorts.entrySet()) {
 				currentNodeAddress = entry.getKey();
-				System.out.println("ROUTING NODE: Pinging : " + currentNodeAddress );
+				System.out.println("ROUTING NODE: Pinging : " + currentNodeAddress);
 
 				entry.getValue().ping();
 
@@ -505,9 +577,9 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	void ping() throws ConnectException {
 
-		if (!isStillOn) throw new ConnectException("The node you are trying to ping is no longer ON");
+		if (!isStillOn)
+			throw new ConnectException("The node you are trying to ping is no longer ON");
 
-		
 	}
 
 	/**
@@ -546,7 +618,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 			isStillOn = false;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 }
