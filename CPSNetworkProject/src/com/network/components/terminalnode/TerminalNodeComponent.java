@@ -281,8 +281,8 @@ public class TerminalNodeComponent extends AbstractComponent {
 		Message message = new Message(new NodeAddress("192.168.25.6"),
 				"Hello Sofiane the fonctionnality works perfectly", 25);
 //		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
-//		if (!address.equals(message.getAddress()))
-//			utilityObject.sendMessage(message, communicationConnections);
+		if (!address.equals(message.getAddress()))
+			utilityObject.sendMessage(message, communicationConnections);
 
 		super.execute();
 
