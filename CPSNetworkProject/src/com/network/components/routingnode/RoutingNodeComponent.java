@@ -91,6 +91,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 		super(1, 0);
 		this.nodeAddress = address;
 		this.initialPosition = initiaPosition;
+		//this is the range
 		this.initialRange = initialRange;
 
 		this.routes = new ConcurrentHashMap<>();
