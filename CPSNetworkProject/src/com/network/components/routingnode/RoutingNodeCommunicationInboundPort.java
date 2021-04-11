@@ -21,16 +21,18 @@ public class RoutingNodeCommunicationInboundPort extends AbstractInboundPort imp
 
 	/**
 	 * create and initialize routing node communication inbound ports.
+	 * 
 	 * @param owner component that owns this port.
 	 * @exception Exception
 	 */
-	public RoutingNodeCommunicationInboundPort (ComponentI owner) throws Exception{
+	public RoutingNodeCommunicationInboundPort(ComponentI owner) throws Exception {
 		super(CommunicationCI.class, owner);
 	}
-	
+
 	/**
 	 * create and initialize routing node communication inbound ports.
-	 * @param uri unique identifier of the port.
+	 * 
+	 * @param uri   unique identifier of the port.
 	 * @param owner component that owns this port.
 	 * @exception Exception
 	 */
@@ -41,7 +43,7 @@ public class RoutingNodeCommunicationInboundPort extends AbstractInboundPort imp
 
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_CONNECTIONS_EXECUTOR_SERVICE_URI, c -> {
 			((RoutingNodeComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
@@ -50,7 +52,7 @@ public class RoutingNodeCommunicationInboundPort extends AbstractInboundPort imp
 	@Override
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_CONNECTIONS_EXECUTOR_SERVICE_URI, c -> {
 			((RoutingNodeComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
@@ -58,7 +60,7 @@ public class RoutingNodeCommunicationInboundPort extends AbstractInboundPort imp
 
 	@Override
 	public void transmitMessage(MessageI m) throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_MESSAGING_EXECUTOR_SERVICE_URI, c -> {
 			((RoutingNodeComponent) c).transmitMessage(m);
 			return null;
 		});
@@ -66,12 +68,13 @@ public class RoutingNodeCommunicationInboundPort extends AbstractInboundPort imp
 
 	@Override
 	public int hasRouteFor(AddressI address) throws Exception {
-		return getOwner().handleRequest(c -> ((RoutingNodeComponent) c).hasRouteFor(address));
+		return getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI,
+				c -> ((RoutingNodeComponent) c).hasRouteFor(address));
 	}
 
 	@Override
 	public void ping() throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_CONNECTIONS_EXECUTOR_SERVICE_URI, c -> {
 			((RoutingNodeComponent) c).ping();
 			return null;
 		});

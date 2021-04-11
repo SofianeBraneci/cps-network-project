@@ -29,7 +29,8 @@ public class RegisterComponent extends AbstractComponent {
 	/** register port */
 	protected RegisterServiceInboundPort registerPort;
 	/** the unique register inbound port uri */
-	public static String REGISTER_INBOUND_PORT_URI;
+	public static  String REGISTER_INBOUND_PORT_URI;
+	public static final String REGISTETR_EXECUTOR_SERVICE_URI = "REGISTETR_EXCUTOR_SERVICE_URI";
 
 	/** all terminal nodes */
 	private Map<NodeAddressI, NodeComponentInformationWrapper> terminalNodesTable;
@@ -52,7 +53,7 @@ public class RegisterComponent extends AbstractComponent {
 			terminalNodesTable = new ConcurrentHashMap<>();
 			routingNodesTable = new ConcurrentHashMap<>();
 			accessPointsNodesTable = new ConcurrentHashMap<>();
-			exectutorIndex = createNewExecutorService("REGISTRATION_EXECUTOR_INDEX", 10, false);
+			exectutorIndex = createNewExecutorService(REGISTETR_EXECUTOR_SERVICE_URI, 10, false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -132,29 +133,37 @@ public class RegisterComponent extends AbstractComponent {
 	Set<ConnectionInfo> registerTerminalNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange) {
 		System.out.println("REGISTERING A NEW TERMINAL NODE IP: " + address);
+//
+//		Future<Set<ConnectionInfo>> futureNeighbors = getExecutorService(exectutorIndex)
+//				.submit(new Callable<Set<ConnectionInfo>>() {
+//
+//					@Override
+//					public Set<ConnectionInfo> call() throws Exception {
+//						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 1);
+//
+//						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 2));
+//
+//						terminalNodesTable.put(address,
+//								new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
+//						System.out.println("current terminal nodes table size : " + terminalNodesTable.size());
+//						return neighbores;
+//					}
+//				});
+//		try {
+//			return futureNeighbors.get();
+//		} catch (InterruptedException | ExecutionException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//			return new HashSet<>();
+//		}
+		Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 1);
 
-		Future<Set<ConnectionInfo>> futureNeighbors = getExecutorService(exectutorIndex)
-				.submit(new Callable<Set<ConnectionInfo>>() {
+		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 2));
 
-					@Override
-					public Set<ConnectionInfo> call() throws Exception {
-						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 1);
-
-						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 2));
-
-						terminalNodesTable.put(address,
-								new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
-						System.out.println("current terminal nodes table size : " + terminalNodesTable.size());
-						return neighbores;
-					}
-				});
-		try {
-			return futureNeighbors.get();
-		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return new HashSet<>();
-		}
+		terminalNodesTable.put(address,
+				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
+		System.out.println("current terminal nodes table size : " + terminalNodesTable.size());
+		return neighbores;
 
 	}
 
@@ -171,34 +180,47 @@ public class RegisterComponent extends AbstractComponent {
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
 		System.out.println("REGISTERING A NEW ACCESS POINT IP: " + address);
 
-		Future<Set<ConnectionInfo>> futureNeighbors = getExecutorService(exectutorIndex)
-				.submit(new Callable<Set<ConnectionInfo>>() {
-
-					public Set<ConnectionInfo> call() throws Exception {
-						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition,
-								Double.POSITIVE_INFINITY, 2);
-						
-						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
-						
-						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
-						
-						accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(
-								communicationInboundPortURI, initialPosition, routingInboundPortURI));
-						
-						System.out.println("current access points table size : " + accessPointsNodesTable.size());
-						return neighbores;
-
-					};
-
-				});
-
-		try {
-			return futureNeighbors.get();
-		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return new HashSet<>();
-		}
+//		Future<Set<ConnectionInfo>> futureNeighbors = getExecutorService(exectutorIndex)
+//				.submit(new Callable<Set<ConnectionInfo>>() {
+//
+//					public Set<ConnectionInfo> call() throws Exception {
+//						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition,
+//								Double.POSITIVE_INFINITY, 2);
+//						
+//						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
+//						
+//						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
+//						
+//						accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(
+//								communicationInboundPortURI, initialPosition, routingInboundPortURI));
+//						
+//						System.out.println("current access points table size : " + accessPointsNodesTable.size());
+//						return neighbores;
+//
+//					};
+//
+//				});
+//
+//		try {
+//			return futureNeighbors.get();
+//		} catch (InterruptedException | ExecutionException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//			return new HashSet<>();
+//		}
+//		
+		Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition,
+				Double.POSITIVE_INFINITY, 2);
+		
+		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
+		
+		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
+		
+		accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(
+				communicationInboundPortURI, initialPosition, routingInboundPortURI));
+		
+		System.out.println("current access points table size : " + accessPointsNodesTable.size());
+		return neighbores;
 
 	}
 
@@ -214,36 +236,50 @@ public class RegisterComponent extends AbstractComponent {
 	Set<ConnectionInfo> registerRoutingNode(NodeAddressI address, String communicationInboundPortURI,
 			PositionI initialPosition, double initialRange, String routingInboundPortURI) {
 
-		Future<Set<ConnectionInfo>> futureNeighFuture = getExecutorService(exectutorIndex)
-				.submit(new Callable<Set<ConnectionInfo>>() {
-
-					@Override
-					public Set<ConnectionInfo> call() throws Exception {
-						// TODO Auto-generated method stub
-						System.out.println("REGISTERING A NEW ROUTING NODE IP: " + address);
-						
-						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 2);
-						
-						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
-						
-						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
-						
-						routingNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
-								initialPosition, routingInboundPortURI));
-						
-						System.out.println("current routing nodes table size : " + routingNodesTable.size());
-						return neighbores;
-
-					}
-				});
-
-		try {
-			return futureNeighFuture.get();
-		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return new HashSet<>();
-		}
+//		Future<Set<ConnectionInfo>> futureNeighFuture = getExecutorService(exectutorIndex)
+//				.submit(new Callable<Set<ConnectionInfo>>() {
+//
+//					@Override
+//					public Set<ConnectionInfo> call() throws Exception {
+//						// TODO Auto-generated method stub
+//						System.out.println("REGISTERING A NEW ROUTING NODE IP: " + address);
+//						
+//						Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 2);
+//						
+//						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
+//						
+//						neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
+//						
+//						routingNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
+//								initialPosition, routingInboundPortURI));
+//						
+//						System.out.println("current routing nodes table size : " + routingNodesTable.size());
+//						return neighbores;
+//
+//					}
+//				});
+//
+//		try {
+//			return futureNeighFuture.get();
+//		} catch (InterruptedException | ExecutionException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//			return new HashSet<>();
+//		}
+//		
+		System.out.println("REGISTERING A NEW ROUTING NODE IP: " + address);
+		
+		Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 2);
+		
+		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
+		
+		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
+		
+		routingNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
+				initialPosition, routingInboundPortURI));
+		
+		System.out.println("current routing nodes table size : " + routingNodesTable.size());
+		return neighbores;
 	}
 
 	/**

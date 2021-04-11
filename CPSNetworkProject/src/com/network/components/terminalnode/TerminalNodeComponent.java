@@ -6,15 +6,15 @@ import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
 import com.network.common.Message;
-import com.network.common.NetworkAddress;
 import com.network.common.NodeAddress;
-import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
+import com.network.common.RoutingOutboundPort;
+import com.network.common.Utility;
 import com.network.components.register.RegisterComponent;
 import com.network.connectors.CommunicationConnector;
 import com.network.connectors.RegistrationConnector;
@@ -57,6 +57,9 @@ public class TerminalNodeComponent extends AbstractComponent {
 	private int executorServiceIndexCommunication;
 	private int executorServiceIndexMessage;
 
+	public static final String TERMINAL_NODE_CONNECTION_EXECUTOR_SERVICE_URI = "TERMINAL_NODE_CONNECTION_EXECUTOR_SERVICE_URI";
+	public static final String TERMINAL_NODE_MESSAGING_EXECUTOR_SERVICE_URI = "TERMINAL_NODE_MESSAGING_EXECUTOR_SERVICE_URI";
+	private final Utility utilityObject = new Utility();
 	private boolean isStillOn;
 
 	/**
@@ -73,10 +76,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 		this.initialPosition = initialPosition;
 		this.initialRange = initialRange;
 		this.communicationConnections = new ConcurrentHashMap<>();
-		this.executorServiceIndexCommunication = createNewExecutorService(
-				"TERMINAL NODE EXECUTOR SERVICE URI FOR CONNECTION", 10, false);
-		this.executorServiceIndexCommunication = createNewExecutorService(
-				"TERMINAL NODE EXECUTOR SERVICE URI FOR MESSAGE SENDING", 10, false);
+		this.executorServiceIndexCommunication = createNewExecutorService(TERMINAL_NODE_CONNECTION_EXECUTOR_SERVICE_URI,
+				10, false);
+		this.executorServiceIndexMessage = createNewExecutorService(TERMINAL_NODE_MESSAGING_EXECUTOR_SERVICE_URI, 10,
+				false);
 
 		try {
 			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
@@ -93,49 +96,6 @@ public class TerminalNodeComponent extends AbstractComponent {
 	 * 
 	 * @throws Exception
 	 */
-	protected TerminalNodeComponent() {
-		super(10, 0);
-
-		this.address = new NodeAddress("Some IP");
-		this.initialPosition = new Position(1, 2);
-		this.initialRange = 200;
-		this.communicationConnections = new ConcurrentHashMap<>();
-		this.executorServiceIndexCommunication = createNewExecutorService(
-				"TERMINAL NODE EXECUTOR SERVICE URI FOR CONNECTION", 10, false);
-		this.executorServiceIndexCommunication = createNewExecutorService(
-				"TERMINAL NODE EXECUTOR SERVICE URI FOR MESSAGE SENDING", 10, false);
-
-		try {
-			this.terminalNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
-			this.terminalNodeCommunicationInboundPort = new TerminalNodeCommunicationInboundPort(this);
-			this.terminalNodeRegistrationOutboundPort.publishPort();
-			this.terminalNodeCommunicationInboundPort.publishPort();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
-			System.err.println(e.getMessage());
-		}
-	}
-
-	private void connectWithNeighbor(NodeAddressI address, String communicationInboundURI) {
-		try {
-			
-			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
-			port.publishPort();
-
-			doPortConnection(port.getPortURI(), communicationInboundURI,
-					CommunicationConnector.class.getCanonicalName());
-
-			communicationConnections.put(address, port);
-			
-			port.connect(this.address, terminalNodeCommunicationInboundPort.getPortURI());
-			
-			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED : " + address);
-
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-	}
 
 	/**
 	 * Connect the actual terminal node with another node to achieve a peer to peer
@@ -147,28 +107,19 @@ public class TerminalNodeComponent extends AbstractComponent {
 	 */
 	void connect(NodeAddressI address, String communicationInboundURI) {
 
-		Future<?> future = getExecutorService(executorServiceIndexCommunication).submit(() -> {
-			try {
-				if (communicationConnections.containsKey(address))
-					return;
-				CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
-				port.publishPort();
-
-				doPortConnection(port.getPortURI(), communicationInboundURI,
-						CommunicationConnector.class.getCanonicalName());
-
-				communicationConnections.put(address, port);
-				System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED : " + address);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		});
-
 		try {
-			future.get();
-		} catch (Exception e2) {
-			// TODO: handle exception
+			if (communicationConnections.containsKey(address) || address.equals(this.address))
+				return;
+			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
+			port.publishPort();
+
+			doPortConnection(port.getPortURI(), communicationInboundURI,
+					CommunicationConnector.class.getCanonicalName());
+
+			communicationConnections.put(address, port);
+			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED : " + address);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 	}
@@ -176,6 +127,14 @@ public class TerminalNodeComponent extends AbstractComponent {
 	void connectRouting(NodeAddressI address, String communicationInboundPort, String routingInboundPort) {
 		// Nothing to do
 	}
+
+	/***
+	 * 
+	 * this method is the one that should be invoked to send a message form the
+	 * current node to some other node
+	 * 
+	 * 
+	 */
 
 	/**
 	 * Transmit a message
@@ -185,38 +144,41 @@ public class TerminalNodeComponent extends AbstractComponent {
 	void transmitMessage(MessageI m) {
 		// Check if it has a route to message's address and send it via that port, else
 
-		getExecutorService(executorServiceIndexMessage).execute(() -> {
-			int N = 3;
-			try {
-				if (this.address.equals(m.getAddress())) {
-					System.out.println("FROM TERMINAL NODE: A MESSAGE IS RECEIVED");
-					return;
-				}
+		int N = 3;
+		try {
 
-				// check if a neighbor has a route
-				int route = hasRouteFor(m.getAddress());
-				System.out.println("ROUTE LENGTH IS " + route);
-				if (route != -1) {
-
-					System.out.println("THE SENDING ADDRESS IS " + sendingAddressI);
-					communicationConnections.get(sendingAddressI).transmitMessage(m);
-
-				} else {
-					System.out.println("ALL NEIGHBORS RESPONDED WITH A -1, PROCEED WITH FLODING");
-					for (CommunicationOutBoundPort port : communicationConnections.values()) {
-						if (N == 0)
-							break;
-						port.transmitMessage(m);
-						N--;
-					}
-					return;
-				}
-				// proceed by flooding the network
-			} catch (Exception e) {
-				e.printStackTrace();
+			if (!m.stillAlive()) {
+				System.out.println("MESSAGE TIME EXPIRED");
+				return;
 			}
 
-		});
+			if (this.address.equals(m.getAddress())) {
+				System.out.println("FROM TERMINAL NODE: A MESSAGE IS RECEIVED, CONTENT : " + m.getContent());
+				return;
+			}
+			m.decrementHops();
+			// check if a neighbor has a route
+			int route = hasRouteFor(m.getAddress());
+			System.out.println("ROUTE LENGTH IS " + route);
+			if (route != -1) {
+
+				System.out.println("THE SENDING ADDRESS IS " + sendingAddressI);
+				communicationConnections.get(sendingAddressI).transmitMessage(m);
+
+			} else {
+				System.out.println("ALL NEIGHBORS RESPONDED WITH A -1, PROCEED WITH FLODING");
+				for (CommunicationOutBoundPort port : communicationConnections.values()) {
+					if (N == 0)
+						break;
+					port.transmitMessage(m);
+					N--;
+				}
+				return;
+			}
+			// proceed by flooding the network
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -275,10 +237,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 			// this will invoke the connect method of the other component!!!
-			connectWithNeighbor(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
-
+			utilityObject.connectWithNeighbor(this, address, terminalNodeCommunicationInboundPort.getPortURI(),
+					communicationConnections, connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
 		}
-
+		// simulate a random disconnection
 		getExecutorService(executorServiceIndexCommunication).execute(() -> {
 
 			int randomSleepDuration = new Random().nextInt(5000) + 1000;
@@ -299,11 +261,12 @@ public class TerminalNodeComponent extends AbstractComponent {
 			}
 
 		});
-
+		// constantly check if the neighbors are still on
 		getExecutorService(executorServiceIndexCommunication).execute(() -> {
 			boolean work = true;
 			while (work) {
 				pingNeighboors();
+				if(!isStillOn) work = false;
 				try {
 					Thread.sleep(500L);
 				} catch (InterruptedException e) {
@@ -313,24 +276,28 @@ public class TerminalNodeComponent extends AbstractComponent {
 			}
 		});
 
-		// uncomment to test unregister
-//		terminalNodeRegistrationOutboundPort.unregister(address);
-
 		// uncomment to test message sending
 		// Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 55);
-		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 56);
+		Message message = new Message(new NodeAddress("192.168.25.6"),
+				"Hello Sofiane the fonctionnality works perfectly", 25);
 //		Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5 );
-		transmitMessage(message);
+//		if (!address.equals(message.getAddress()))
+//			utilityObject.sendMessage(message, communicationConnections);
+
 		super.execute();
 
 	}
 
 	private void disconnectFromNeighbors() throws Exception {
-		for (CommunicationOutBoundPort port : communicationConnections.values()) {
-			if (port.connected()) {
-				doPortDisconnection(port.getPortURI());
-			}
+//		getExecutorService(executorServiceIndexCommunication).shutdownNow();
+//		getExecutorService(executorServiceIndexMessage).shutdownNow();
+		
+		for(CommunicationOutBoundPort port: communicationConnections.values()) {
+			doPortDisconnection(port.getPortURI());
+			port.unpublishPort();
 		}
+		communicationConnections.clear();
+		
 	}
 
 	private void pingNeighboors() {
@@ -345,25 +312,37 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 			} catch (Exception e) {
 				// TODO: handle exception
-				if (e instanceof ConnectException) {
+				if (e instanceof ExecutionException) {
+
+					CommunicationOutBoundPort port = communicationConnections.get(currentNodeAddressI);
+					try {
+						doPortDisconnection(port.getPortURI());
+						port.unpublishPort();
+					} catch (Exception e2) {
+						// TODO: handle exception
+					}
+
 					communicationConnections.remove(currentNodeAddressI);
 					System.out.println("Ping address : " + address + " raised an exception");
+
 				}
 			}
 		}
-
 	}
 
 	@Override
 	public synchronized void finalise() throws Exception {
 		doPortDisconnection(terminalNodeRegistrationOutboundPort.getPortURI());
-		disconnectFromNeighbors();
+		for(CommunicationOutBoundPort port: communicationConnections.values()) {
+			if(port.connected()) doPortDisconnection(port.getPortURI());
+		}
 		super.finalise();
 	}
 
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
-		getExecutorService(executorServiceIndexCommunication).shutdownNow();
+//		getExecutorService(executorServiceIndexCommunication).shutdownNow();
+//		getExecutorService(executorServiceIndexMessage).shutdownNow();
 
 		try {
 			terminalNodeRegistrationOutboundPort.unpublishPort();

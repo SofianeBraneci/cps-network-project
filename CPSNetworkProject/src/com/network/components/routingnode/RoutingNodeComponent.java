@@ -1,25 +1,23 @@
 package com.network.components.routingnode;
 
 import java.rmi.ConnectException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.jar.JarException;
 import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
+import com.network.common.Message;
 import com.network.common.NodeAddress;
-import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
 import com.network.common.RouteInfo;
 import com.network.connectors.RoutingConnector;
 import com.network.common.RoutingOutboundPort;
+import com.network.common.Utility;
 import com.network.components.register.RegisterComponent;
 import com.network.connectors.CommunicationConnector;
 import com.network.connectors.RegistrationConnector;
@@ -75,6 +73,10 @@ public class RoutingNodeComponent extends AbstractComponent {
 	// this boolean is used to check if the current node is still On i.e not
 	// disconnected yet
 	private boolean isStillOn;
+	private final Utility utilityObject = new Utility();
+	public static final String ROUTING_NODE_CONNECTIONS_EXECUTOR_SERVICE_URI = "ROUTING_NODE_CONNECTIONS_EXECUTOR_SERVICE_URI";
+	public static final String ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI = "ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI";
+	public static final String ROUTING_NODE_MESSAGING_EXECUTOR_SERVICE_URI = "ROUTING_NODE_MESSAGING_EXECUTOR_SERVICE_URI";
 
 	/**
 	 * create and initialize routing node
@@ -103,10 +105,12 @@ public class RoutingNodeComponent extends AbstractComponent {
 		this.routingNodeCommunicationInboundPort.publishPort();
 		this.routingNodeRegistrationOutboundPort.publishPort();
 		this.routingInboundPort.publishPort();
-		this.routingExecutorServiceIndex = createNewExecutorService("ROUTING NODE ROUITNG EXECUTOR SERVICE", 10, false);
-		this.connectionsExecutorServiceIndex = createNewExecutorService("ROUTING NODE COMMUNICATION EXECUTOR SERIVCE",
-				10, false);
-		this.messagingExecutorServiceIndex = createNewExecutorService("ROUTING NODE MESSAGING EXECUTOR", 10, false);
+		this.routingExecutorServiceIndex = createNewExecutorService(ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI, 100,
+				false);
+		this.connectionsExecutorServiceIndex = createNewExecutorService(ROUTING_NODE_CONNECTIONS_EXECUTOR_SERVICE_URI,
+				100, false);
+		this.messagingExecutorServiceIndex = createNewExecutorService(ROUTING_NODE_MESSAGING_EXECUTOR_SERVICE_URI, 100,
+				false);
 	}
 
 	/**
@@ -114,37 +118,13 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 * 
 	 * @throws Exception
 	 */
-	protected RoutingNodeComponent() throws Exception {
-		super(1, 0);
-
-		this.nodeAddress = new NodeAddress("some ip");
-		this.initialPosition = new Position(12, 23);
-		this.initialRange = 120;
-		this.routes = new HashMap<>();
-		this.accessPointsMap = new ConcurrentHashMap<>();
-		this.communicationConnectionPorts = new ConcurrentHashMap<>();
-		this.routingOutboundPorts = new ConcurrentHashMap<>();
-
-		this.routingNodeCommunicationInboundPort = new RoutingNodeCommunicationInboundPort(this);
-		this.routingNodeRegistrationOutboundPort = new RegistrationOutboundPort(this);
-		this.routingInboundPort = new RoutingNodeRoutingInboundPort(this);
-
-		this.routingNodeCommunicationInboundPort.publishPort();
-		this.routingNodeRegistrationOutboundPort.publishPort();
-		this.routingInboundPort.publishPort();
-
-		this.routingExecutorServiceIndex = createNewExecutorService("ROUTING NODE EXECUTOR SERVICE", 10, false);
-		this.connectionsExecutorServiceIndex = createNewExecutorService("ROUTING NODE COMMUNICATION EXECUTOR SERIVCE",
-				10, false);
-
-	}
 
 	@Override
 	public synchronized void execute() throws Exception {
 		super.execute();
 		doPortConnection(routingNodeRegistrationOutboundPort.getPortURI(), RegisterComponent.REGISTER_INBOUND_PORT_URI,
 				RegistrationConnector.class.getCanonicalName());
-		
+
 		Set<ConnectionInfo> connectionInfos = routingNodeRegistrationOutboundPort.registerRoutigNode(nodeAddress,
 				routingNodeCommunicationInboundPort.getPortURI(), initialPosition, initialRange,
 				routingInboundPort.getPortURI());
@@ -156,14 +136,21 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 
-			if(connectionInfo.isRouting()) {
-				connectWithRoutingNode(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort(), connectionInfo.getRoutingInboundPortURI());
-			}
-			else {
-				connectWithTerminalNode(connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
+			if (connectionInfo.isRouting()) {
+				// connectWithRoutingNode(connectionInfo.getAddress(),
+				// connectionInfo.getCommunicationInboudPort(),
+				// connectionInfo.getRoutingInboundPortURI());
+				utilityObject.connectWithRoutingNeighbor(this, nodeAddress,
+						routingNodeCommunicationInboundPort.getPortURI(), routingInboundPort.getPortURI(),
+						communicationConnectionPorts, routingOutboundPorts, routes, connectionInfo.getAddress(),
+						connectionInfo.getCommunicationInboudPort(), connectionInfo.getRoutingInboundPortURI());
+			} else {
+				utilityObject.connectWithNeighbor(this, nodeAddress, routingNodeCommunicationInboundPort.getPortURI(),
+						communicationConnectionPorts, connectionInfo.getAddress(),
+						connectionInfo.getCommunicationInboudPort());
 			}
 		}
-		
+
 		// propagating the routing table
 //		getExecutorService(routingExecutorServiceIndex).execute(() -> {
 //			propagateRoutingTable();
@@ -220,22 +207,10 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 		});
 
-		// uncomment this to test unregister
-		/*
-		 * unregister()
-		 */
-
-		// uncomment this to test message sending
-		/*
-		 * Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 5 );
-		 * Message message = new Message(new NodeAddress("192.168.25.1"), "Hello", 5 );
-		 * Message message = new Message(new NetworkAddress("192.168.25.6"), "Hello", 5
-		 * ); transmitMessage(message); // for sending multiple messages just add them
-		 * to the executor service
-		 * getExecutorService(messagingExecutorService).execute(()->{
-		 * transmitMessage(m); };
-		 * 
-		 */
+//		Message message = new Message(new NodeAddress("192.168.25.6"), "Hello", 10);
+//		if (!message.getAddress().equals(nodeAddress)) {
+//			utilityObject.sendMessage(message, communicationConnectionPorts);
+//		}
 
 	}
 
@@ -243,7 +218,10 @@ public class RoutingNodeComponent extends AbstractComponent {
 		boolean work = true;
 		while (work) {
 			try {
-
+				if (!isStillOn) {
+					work = false;
+					break;
+				}
 				for (RoutingOutboundPort neighboroOutboundPort : routingOutboundPorts.values()) {
 					for (Entry<NodeAddressI, Set<RouteInfo>> entry : routes.entrySet()) {
 						neighboroOutboundPort.updateRouting(entry.getKey(), entry.getValue());
@@ -258,25 +236,30 @@ public class RoutingNodeComponent extends AbstractComponent {
 			} catch (InterruptedException e) {
 				// e.printStackTrace();
 				work = false;
+				break;
 			} catch (Exception e) {
 				// e.printStackTrace();
 				work = false;
+				break;
 			}
 		}
 	}
 
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
-		getExecutorService(connectionsExecutorServiceIndex).shutdownNow();
-		getExecutorService(routingExecutorServiceIndex).shutdownNow();
+//		getExecutorService(connectionsExecutorServiceIndex).shutdownNow();
+//		getExecutorService(routingExecutorServiceIndex).shutdownNow();
 		try {
-			routingNodeRegistrationOutboundPort.unpublishPort();
-			routingNodeCommunicationInboundPort.unpublishPort();
-			routingInboundPort.unpublishPort();
-			for (CommunicationOutBoundPort port : communicationConnectionPorts.values())
-				port.unpublishPort();
-			for (RoutingOutboundPort port : routingOutboundPorts.values())
-				port.unpublishPort();
+			if(routingNodeRegistrationOutboundPort.isPublished()) routingNodeRegistrationOutboundPort.unpublishPort();
+			if( routingNodeCommunicationInboundPort.isPublished()) routingNodeCommunicationInboundPort.unpublishPort();
+			if(routingInboundPort.isPublished()) routingInboundPort.unpublishPort();
+			for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
+				if(port.isPublished()) port.unpublishPort();
+			}
+
+			for (RoutingOutboundPort port : routingOutboundPorts.values()) {
+				if(port.isPublished()) port.unpublishPort();
+			}
 
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
@@ -288,13 +271,12 @@ public class RoutingNodeComponent extends AbstractComponent {
 	public synchronized void finalise() throws Exception {
 		doPortDisconnection(routingNodeRegistrationOutboundPort.getPortURI());
 		for (CommunicationOutBoundPort port : communicationConnectionPorts.values())
-			if (port.connected()) {
+
+			if (port.connected())
 				doPortDisconnection(port.getPortURI());
-			}
 		for (RoutingOutboundPort port : routingOutboundPorts.values())
-			if (port.connected()) {
+			if (port.connected())
 				doPortDisconnection(port.getPortURI());
-			}
 		super.finalise();
 	}
 
@@ -308,30 +290,21 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 */
 	void connect(NodeAddressI address, String communicationInboundURI) {
 
-	Future<?> future =  	getExecutorService(connectionsExecutorServiceIndex).submit(() -> {
-			System.out.println("FROM ROUTING NODE: CONNECT METHOD IS INVOKED" + address.toString());
-			try {
-				if (communicationConnectionPorts.containsKey(address))
-					return;
+		try {
+			if (communicationConnectionPorts.containsKey(address) || address.equals(nodeAddress))
+				return;
 
-				// we create a new outbound port for the new neighbor
-				CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
-				port.publishPort();
+			// we create a new outbound port for the new neighbor
+			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
+			port.publishPort();
 
-				doPortConnection(port.getPortURI(), communicationInboundURI,
-						CommunicationConnector.class.getCanonicalName());
-				communicationConnectionPorts.put(address, port);
-				System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE " + address);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		});
-	
-	try {
-		future.get();
-	} catch (Exception e2) {
-		// TODO: handle exception
-	}
+			doPortConnection(port.getPortURI(), communicationInboundURI,
+					CommunicationConnector.class.getCanonicalName());
+			communicationConnectionPorts.put(address, port);
+			System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE " + address);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -345,117 +318,64 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 * @param routingInboudPortURI       routing node to connect with routing
 	 *                                   inbound port uri
 	 */
-	
-	
-	private void connectWithTerminalNode(NodeAddressI address, String communicationInboundPortURI) {
+	void connectRouting(NodeAddressI address, String communicationInboundPortURI, String routingInboudPortURI) {
+
 		try {
+			if (communicationConnectionPorts.containsKey(address)) {
+				System.err.println("ALREADY KNOWN");
+				return;
+			}
 
 			CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
 			port.publishPort();
+			RoutingOutboundPort routingOutboundPort = new RoutingOutboundPort(this);
+			routingOutboundPort.publishPort();
+
+			doPortConnection(routingOutboundPort.getPortURI(), routingInboudPortURI,
+					RoutingConnector.class.getCanonicalName());
+
 			doPortConnection(port.getPortURI(), communicationInboundPortURI,
 					CommunicationConnector.class.getCanonicalName());
-
-			port.connect(nodeAddress, routingNodeCommunicationInboundPort.getPortURI());
-
 			communicationConnectionPorts.put(address, port);
-
-			System.out.println("ACCESS POINT NODE: CONNECTED WITH A TERMINAL NODE");
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-	}
-
-	private void connectWithRoutingNode(NodeAddressI address, String communicationInboundPortURI,
-			String routingInboundPortURI) {
-		try {
-
-			
-			RoutingOutboundPort port = new RoutingOutboundPort(this);
-			
-			port.publishPort();
-			
-			doPortConnection(port.getPortURI(), routingInboundPortURI, RoutingConnector.class.getCanonicalName());
-
-			CommunicationOutBoundPort portC = new CommunicationOutBoundPort(this);
-			
-			portC.publishPort();
-			
-			doPortConnection(portC.getPortURI(), communicationInboundPortURI,
-					CommunicationConnector.class.getCanonicalName());
-
-			portC.connectRouting(nodeAddress, routingNodeCommunicationInboundPort.getPortURI(),
-					routingInboundPort.getPortURI());
-
-			communicationConnectionPorts.put(address, portC);
-			routingOutboundPorts.put(address, port);
-
+			routingOutboundPorts.put(address, routingOutboundPort);
+			System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE " + address);
 			Set<RouteInfo> routeInfos = new HashSet<>();
 			RouteInfo info = new RouteInfo(address, 1);
 			routeInfos.add(info);
 			routes.put(address, routeInfos);
-
-			System.out.println("ACCESS POINT NODE: CONNECTED A ROUITNG NODE");
-
+			System.out.println("ROUTING NODE: total neighbors  = " + communicationConnectionPorts.size()
+					+ ", routing neighbors = " + routes.size() + ", other access points = " + accessPointsMap.size());
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
-	}
-
-	
-	void connectRouting(NodeAddressI address, String communicationInboundPortURI, String routingInboudPortURI) {
-
-	Future<?> future = 	getExecutorService(connectionsExecutorServiceIndex).submit(() -> {
-			try {
-				if (communicationConnectionPorts.containsKey(address)) {
-					return;
-				}
-
-				CommunicationOutBoundPort port = new CommunicationOutBoundPort(this);
-				port.publishPort();
-				RoutingOutboundPort routingOutboundPort = new RoutingOutboundPort(this);
-				routingOutboundPort.publishPort();
-
-				doPortConnection(routingOutboundPort.getPortURI(), routingInboudPortURI,
-						RoutingConnector.class.getCanonicalName());
-
-				doPortConnection(port.getPortURI(), communicationInboundPortURI,
-						CommunicationConnector.class.getCanonicalName());
-				communicationConnectionPorts.put(address, port);
-				routingOutboundPorts.put(address, routingOutboundPort);
-				System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE " + address);
-				Set<RouteInfo> routeInfos = new HashSet<>();
-				RouteInfo info = new RouteInfo(address, 1);
-				routeInfos.add(info);
-				routes.put(address, routeInfos);
-				System.out.println("ROUTING NODE: total neighbors  = " + communicationConnectionPorts.size()
-						+ ", routing neighbors = " + routes.size() + ", other access points = "
-						+ accessPointsMap.size());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		});
-	
-	try {
-		future.get();
-	} catch (Exception e2) {
-		// TODO: handle exception
-	}
 
 	}
 
 	void disconnectFromNeighbors() {
 		try {
-			for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
+//			getExecutorService(connectionsExecutorServiceIndex).shutdown();
+//			getExecutorService(routingExecutorServiceIndex).shutdown();
+//			getExecutorService(messagingExecutorServiceIndex).shutdown();
+			routingInboundPort.unpublishPort();
+			routingNodeCommunicationInboundPort.unpublishPort();
+			if(routingNodeRegistrationOutboundPort.connected())routingNodeRegistrationOutboundPort.unpublishPort();
+			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnectionPorts.entrySet()) {
+				CommunicationOutBoundPort port = entry.getValue();
 				if (port.connected()) {
 					doPortDisconnection(port.getPortURI());
+					port.unpublishPort();
+
 				}
 			}
-			for (RoutingOutboundPort port : routingOutboundPorts.values()) {
+			communicationConnectionPorts.clear();
+			for (Entry<NodeAddressI, RoutingOutboundPort> entry : routingOutboundPorts.entrySet()) {
+				RoutingOutboundPort port = entry.getValue();
 				if (port.connected()) {
 					doPortDisconnection(port.getPortURI());
+					port.unpublishPort();
 				}
 			}
+			routingOutboundPorts.clear();
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -463,6 +383,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	void pingNeighbors() {
 		NodeAddressI currentNodeAddress = null;
+
 		try {
 			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnectionPorts.entrySet()) {
 				currentNodeAddress = entry.getKey();
@@ -473,8 +394,21 @@ public class RoutingNodeComponent extends AbstractComponent {
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
-			if (e instanceof ConnectException) {
+			if (e instanceof ExecutionException) {
+				try {
+					doPortDisconnection(communicationConnectionPorts.get(currentNodeAddress).getPortURI());
+					communicationConnectionPorts.get(currentNodeAddress).unpublishPort();
+					RoutingOutboundPort port = routingOutboundPorts.get(currentNodeAddress);
+					if (port != null) {
+						doPortDisconnection(port.getPortURI());
+						routingOutboundPorts.remove(currentNodeAddress);
+					}
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				communicationConnectionPorts.remove(currentNodeAddress);
+
 				System.out.println("Ping address : " + currentNodeAddress + " raised an exception");
 			}
 		}
@@ -501,53 +435,52 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 * @param m the message
 	 */
 	void transmitMessage(MessageI m) {
-		getExecutorService(messagingExecutorServiceIndex).execute(() -> {
+		if (!isStillOn)
+			return;
+		System.out.println("FROM TRANSMIT MESSAGE IN ROUTING NODE");
+		if (!m.stillAlive()) {
+			System.out.println("Message is dead");
+			return;
+		}
 
-			System.out.println("FROM TRANSMIT MESSAGE IN ROUTING NODE");
-			if (!m.stillAlive()) {
-				System.out.println("Message is dead");
-				return;
+		if (nodeAddress.equals(m.getAddress())) {
+			System.out.println("MESSAGE IS RECEIVED IN ROUTING NODE");
+			return;
+		}
+		try {
+
+			if (m.getAddress() instanceof NetworkAddressI) {
+				System.out.println("ROUTING NODE HAS RECEIVED A NETWORK ADDRESS, REDIRECTING TO AN ACCESS POINT");
+				NodeAddressI closestAccessPoint = getClosestAccessPoint();
+				if (closestAccessPoint == null) {
+					System.err.println("NO ACCESS POINT TO BE FOUND!");
+					return;
+				}
+				communicationConnectionPorts.get(closestAccessPoint).transmitMessage(m);
+
 			}
 
-			if (nodeAddress.equals(m.getAddress())) {
-				System.out.println("MESSAGE IS RECEIVED IN ROUTING NODE");
-				return;
-			}
-			try {
+			CommunicationOutBoundPort sendingPort = communicationConnectionPorts.get(m.getAddress());
+			m.decrementHops();
+			if (sendingPort != null) {
+				System.out.println("ROUTING NODE HAS AN ENTRY FOR THE DISTINATION");
+				sendingPort.transmitMessage(m);
 
-				if (m.getAddress() instanceof NetworkAddressI) {
-					System.out.println("ROUTING NODE HAS RECEIVED A NETWORK ADDRESS, REDIRECTING TO AN ACCESS POINT");
-					NodeAddressI closestAccessPoint = getClosestAccessPoint();
-					if (closestAccessPoint == null) {
-						System.err.println("NO ACCESS POINT TO BE FOUND!");
+			} else {
+				System.out.println("ROUTING NODE PROCEEDING WITH MESSAGE PROPAGATION");
+
+				int n = 3;
+				for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
+					if (n == 0)
 						return;
-					}
-					communicationConnectionPorts.get(closestAccessPoint).transmitMessage(m);
-
+					port.transmitMessage(m);
+					n--;
 				}
-
-				CommunicationOutBoundPort sendingPort = communicationConnectionPorts.get(m.getAddress());
-				m.decrementHops();
-				if (sendingPort != null) {
-					System.out.println("ROUTING NODE HAS AN ENTRY FOR THE DISTINATION");
-					sendingPort.transmitMessage(m);
-
-				} else {
-					System.out.println("ROUTING NODE PROCEEDING WITH MESSAGE PROPAGATION");
-
-					int n = 3;
-					for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
-						if (n == 0)
-							return;
-						port.transmitMessage(m);
-						n--;
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
+		} catch (Exception e) {
 
-		});
+		}
+
 	}
 
 	/**
@@ -557,21 +490,13 @@ public class RoutingNodeComponent extends AbstractComponent {
 	 * @return 1 if a neighbors is the address, -1 else
 	 */
 	int hasRouteFor(AddressI address) {
-		System.err.println(communicationConnectionPorts.containsKey(address));
-		Future<Integer> futureRoute = getExecutorService(routingExecutorServiceIndex).submit(() -> {
-			if (communicationConnectionPorts.containsKey(address))
-				return 1;
-			else
-				return -1;
-		});
-
-		try {
-			return futureRoute.get();
-		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (isStillOn)
 			return -1;
-		}
+		System.err.println(communicationConnectionPorts.containsKey(address));
+		if (communicationConnectionPorts.containsKey(address))
+			return 1;
+		else
+			return -1;
 
 	}
 
@@ -618,7 +543,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 			isStillOn = false;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 }

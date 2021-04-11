@@ -11,6 +11,7 @@ import fr.sorbonne_u.components.ports.AbstractInboundPort;
 
 /**
  * Class for access point routing inbound port
+ * 
  * @author Softwarkers
  *
  */
@@ -20,40 +21,41 @@ public class AccessPointRoutingInboundPort extends AbstractInboundPort implement
 
 	/**
 	 * create and initialize routing inbound ports for access points.
+	 * 
 	 * @param owner access point that owns this port
 	 * @exception Exception
 	 */
-	public AccessPointRoutingInboundPort(ComponentI owner) throws Exception{
+	public AccessPointRoutingInboundPort(ComponentI owner) throws Exception {
 		super(RoutingCI.class, owner);
 	}
-	
+
 	/**
 	 * create and initialize routing inbound ports for access points.
-	 * @param uri unique identifier of the port.
+	 * 
+	 * @param uri   unique identifier of the port.
 	 * @param owner access point that owns this port
 	 * @exception Exception
 	 */
-	public AccessPointRoutingInboundPort(String uri, ComponentI owner)
-			throws Exception {
+	public AccessPointRoutingInboundPort(String uri, ComponentI owner) throws Exception {
 		super(uri, RoutingCI.class, owner);
 	}
 
 	@Override
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) throws Exception {
-		getOwner().handleRequest(c->{
-			((AccessPointComponent)c).updateRouting(address, routes);
+		getOwner().handleRequest(AccessPointComponent.ACCESS_POINT_ROUTING_EXECUTOR_SERVICE_URI, c -> {
+			((AccessPointComponent) c).updateRouting(address, routes);
 			return null;
 		});
-		
+
 	}
 
 	@Override
 	public void updateAccessPoint(NodeAddressI neighbour, int numberOfHops) throws Exception {
-		getOwner().handleRequest(c->{
-			((AccessPointComponent)c).updateAccessPoint(neighbour, numberOfHops);
+		getOwner().handleRequest(AccessPointComponent.ACCESS_POINT_ROUTING_EXECUTOR_SERVICE_URI, c -> {
+			((AccessPointComponent) c).updateAccessPoint(neighbour, numberOfHops);
 			return null;
 		});
-		
+
 	}
 
 }

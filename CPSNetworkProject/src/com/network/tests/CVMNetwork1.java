@@ -25,13 +25,18 @@ public class CVMNetwork1 extends AbstractCVM {
 	
 		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),
 				new Object[] { new NodeAddress("192.168.25.2"), new Position(3, 2), 11200.0 });
-
-
-		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
-				new Object[] { new NodeAddress("192.168.25.5"), new Position(2, 3), 11.0 });
 		
+
+//		AbstractComponent.createComponent(RoutingNodeComponent.class.getCanonicalName(),
+//				new Object[] { new NodeAddress("192.168.25.5"), new Position(2, 3), 11.0 });
+//
+//		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
+//				new Object[] { new NodeAddress("192.168.25.6"), new Position(3, 2), 10220.0 });
+//		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
+//				new Object[] { new NodeAddress("192.168.25.15"), new Position(2, 3), 11.0 });
+//		
 		AbstractComponent.createComponent(TerminalNodeComponent.class.getCanonicalName(),
-				new Object[] { new NodeAddress("192.168.25.6"), new Position(3, 2), 10220.0 });
+				new Object[] { new NodeAddress("192.168.25.61"), new Position(3, 2), 10220.0 });
 
 		super.deploy();
 	}

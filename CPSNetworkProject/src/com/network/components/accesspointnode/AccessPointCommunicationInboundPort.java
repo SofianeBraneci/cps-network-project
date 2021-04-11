@@ -38,7 +38,7 @@ public class AccessPointCommunicationInboundPort extends AbstractInboundPort imp
 	
 	@Override
 	public void connect(NodeAddressI address, String communicationInboudURI) throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(AccessPointComponent.ACCESS_POINT_CONNECTIONS_EXECUTOR_SERVICE_URI, c -> {
 			((AccessPointComponent) c).connect(address, communicationInboudURI);
 			return null;
 		});
@@ -48,7 +48,7 @@ public class AccessPointCommunicationInboundPort extends AbstractInboundPort imp
 	public void connectRouting(NodeAddressI address, String communicationInboudPortURI, String routingInboudPortURI)
 			throws Exception {
 
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(AccessPointComponent.ACCESS_POINT_CONNECTIONS_EXECUTOR_SERVICE_URI, c -> {
 			((AccessPointComponent) c).connectRouting(address, communicationInboudPortURI, routingInboudPortURI);
 			return null;
 		});
@@ -56,7 +56,7 @@ public class AccessPointCommunicationInboundPort extends AbstractInboundPort imp
 
 	@Override
 	public void transmitMessage(MessageI m) throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(AccessPointComponent.ACCESS_POINT_MESSAGING_EXECUTOR_SERVICE_URI, c -> {
 			((AccessPointComponent) c).transmitMessage(m);
 			return null;
 		});
@@ -65,12 +65,12 @@ public class AccessPointCommunicationInboundPort extends AbstractInboundPort imp
 
 	@Override
 	public int hasRouteFor(AddressI address) throws Exception {
-		return getOwner().handleRequest(c -> ((AccessPointComponent) c).hasRouteFor(address));
+		return getOwner().handleRequest(AccessPointComponent.ACCESS_POINT_CONNECTIONS_EXECUTOR_SERVICE_URI, c -> ((AccessPointComponent) c).hasRouteFor(address));
 	}
 
 	@Override
 	public void ping() throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().handleRequest(AccessPointComponent.ACCESS_POINT_CONNECTIONS_EXECUTOR_SERVICE_URI, c -> {
 			((AccessPointComponent) c).ping();
 			return null;
 		});
