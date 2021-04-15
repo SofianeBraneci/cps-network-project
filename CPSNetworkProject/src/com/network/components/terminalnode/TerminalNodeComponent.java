@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
@@ -65,6 +66,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 	// this will be used to insure thread safe access to the concurrent hash maps
 	ReentrantLock lock = new ReentrantLock();
+	ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
 	/**
 	 * create and initialize terminal node
@@ -121,10 +123,10 @@ public class TerminalNodeComponent extends AbstractComponent {
 					CommunicationConnector.class.getCanonicalName());
 
 			try {
-				lock.lock();
+				readWriteLock.writeLock().lock();
 				communicationConnections.put(address, port);
 			} finally {
-				lock.unlock();
+				readWriteLock.writeLock().unlock();
 			}
 			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED : " + address);
 		} catch (Exception e) {
@@ -136,14 +138,6 @@ public class TerminalNodeComponent extends AbstractComponent {
 	void connectRouting(NodeAddressI address, String communicationInboundPort, String routingInboundPort) {
 		// Nothing to do
 	}
-
-	/***
-	 * 
-	 * this method is the one that should be invoked to send a message form the
-	 * current node to some other node
-	 * 
-	 * 
-	 */
 
 	/**
 	 * Transmit a message
@@ -204,6 +198,7 @@ public class TerminalNodeComponent extends AbstractComponent {
 		int counter = 0;
 		int current;
 		try {
+			readWriteLock.readLock().lock();
 
 			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnections.entrySet()) {
 				current = entry.getValue().hasRouteFor(address);
@@ -218,6 +213,8 @@ public class TerminalNodeComponent extends AbstractComponent {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return -1;
+		} finally {
+			readWriteLock.readLock().unlock();
 		}
 
 	}
@@ -247,13 +244,13 @@ public class TerminalNodeComponent extends AbstractComponent {
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 			// this will invoke the connect method of the other component!!!
 			try {
-				lock.lock();
+				readWriteLock.writeLock().lock();
 				utilityObject.connectWithNeighbor(this, address, terminalNodeCommunicationInboundPort.getPortURI(),
 						communicationConnections, connectionInfo.getAddress(),
 						connectionInfo.getCommunicationInboudPort());
 
 			} finally {
-				lock.unlock();
+				readWriteLock.writeLock().unlock();
 			}
 
 		}
@@ -307,61 +304,67 @@ public class TerminalNodeComponent extends AbstractComponent {
 	}
 
 	private void disconnectFromNeighbors() throws Exception {
-//		getExecutorService(executorServiceIndexCommunication).shutdownNow();
-//		getExecutorService(executorServiceIndexMessage).shutdownNow();
 
-		for (CommunicationOutBoundPort port : communicationConnections.values()) {
-			doPortDisconnection(port.getPortURI());
-			port.unpublishPort();
-		}
 		try {
+			readWriteLock.readLock().lock();
+			terminalNodeCommunicationInboundPort.unpublishPort();
+			if (terminalNodeRegistrationOutboundPort.connected()) {
+				doPortDisconnection(terminalNodeRegistrationOutboundPort.getPortURI());
+				terminalNodeRegistrationOutboundPort.unpublishPort();
+			}
+			for (CommunicationOutBoundPort port : communicationConnections.values()) {
+				doPortDisconnection(port.getPortURI());
+				port.unpublishPort();
+			}
 
-			lock.lock();
+			readWriteLock.writeLock().lock();
 			communicationConnections.clear();
 
 		} finally {
-			lock.unlock();
+			readWriteLock.writeLock().unlock();
+			readWriteLock.readLock().unlock();
 		}
 	}
 
 	private void pingNeighboors() {
 		// TODO Auto-generated method stub
-
 		NodeAddressI currentNodeAddressI = null;
-		for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnections.entrySet()) {
-			try {
+		try {
+			readWriteLock.readLock().lock();
+			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnections.entrySet()) {
+
 				currentNodeAddressI = entry.getKey();
 				System.out.println("TERMINAL NODE: Pinging : " + currentNodeAddressI);
 				entry.getValue().ping();
-
-			} catch (Exception e) {
-				// TODO: handle exception
-				if (e instanceof ExecutionException) {
-
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			if (e instanceof ExecutionException) {
+				System.out.println("Ping address : " + address + " raised an exception");
+				try {
+					lock.lock();
 					CommunicationOutBoundPort port = communicationConnections.get(currentNodeAddressI);
-					try {
-						doPortDisconnection(port.getPortURI());
-						port.unpublishPort();
-					} catch (Exception e2) {
-						// TODO: handle exception
-					}
-					try {
-						lock.lock();
-						communicationConnections.remove(currentNodeAddressI);
+					doPortDisconnection(port.getPortURI());
+					port.unpublishPort();
+					communicationConnections.remove(currentNodeAddressI);
 
-					} finally {
-						lock.unlock();
-					}
-					System.out.println("Ping address : " + address + " raised an exception");
-
+				} catch (Exception e2) {
+					// TODO: handle exception
+				} finally {
+					lock.unlock();
 				}
+
 			}
 		}
 	}
 
+
+
 	@Override
 	public synchronized void finalise() throws Exception {
-		doPortDisconnection(terminalNodeRegistrationOutboundPort.getPortURI());
+
+		if (terminalNodeRegistrationOutboundPort.connected())
+			doPortDisconnection(terminalNodeRegistrationOutboundPort.getPortURI());
 		for (CommunicationOutBoundPort port : communicationConnections.values()) {
 			if (port.connected())
 				doPortDisconnection(port.getPortURI());
@@ -371,14 +374,15 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
-//		getExecutorService(executorServiceIndexCommunication).shutdownNow();
-//		getExecutorService(executorServiceIndexMessage).shutdownNow();
 
 		try {
-			terminalNodeRegistrationOutboundPort.unpublishPort();
-			terminalNodeCommunicationInboundPort.unpublishPort();
+			if (terminalNodeRegistrationOutboundPort.isPublished())
+				terminalNodeRegistrationOutboundPort.unpublishPort();
+			if (terminalNodeCommunicationInboundPort.isPublished())
+				terminalNodeCommunicationInboundPort.unpublishPort();
 			for (CommunicationOutBoundPort port : communicationConnections.values())
-				port.unpublishPort();
+				if (port.isPublished())
+					port.unpublishPort();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new ComponentShutdownException(e);

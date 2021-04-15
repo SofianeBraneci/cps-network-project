@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.Set;
 
 import com.network.common.CommunicationOutBoundPort;
@@ -79,6 +80,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	public static final String ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI = "ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI";
 	public static final String ROUTING_NODE_MESSAGING_EXECUTOR_SERVICE_URI = "ROUTING_NODE_MESSAGING_EXECUTOR_SERVICE_URI";
 	ReentrantLock lock = new ReentrantLock();
+	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
 	/**
 	 * create and initialize routing node
@@ -133,15 +135,16 @@ public class RoutingNodeComponent extends AbstractComponent {
 				routingInboundPort.getPortURI());
 
 		// directly after being registered the current node becomes ON
-		
+
 		isStillOn = true;
 
 		System.out.println("ROUTING NODE CONNECTIONS = " + connectionInfos.size());
 
-		// in here we don't require locking because only one thread can access the tables
+		// in here we don't require locking because only one thread can access the
+		// tables
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 			try {
-				lock.lock();
+				readWriteLock.writeLock().lock();
 				if (connectionInfo.isRouting()) {
 					utilityObject.connectWithRoutingNeighbor(this, nodeAddress,
 							routingNodeCommunicationInboundPort.getPortURI(), routingInboundPort.getPortURI(),
@@ -154,14 +157,14 @@ public class RoutingNodeComponent extends AbstractComponent {
 				}
 
 			} finally {
-				lock.unlock();
+				readWriteLock.writeLock().unlock();
 			}
 		}
 
 		// propagating the routing table
-//		getExecutorService(routingExecutorServiceIndex).execute(() -> {
-//			propagateRoutingTable();
-//		});
+		getExecutorService(routingExecutorServiceIndex).execute(() -> {
+			propagateRoutingTable();
+		});
 
 		// we add a task to the executor so after some random period time the current
 		// node will unregister
@@ -225,6 +228,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 		boolean work = true;
 		while (work) {
 			try {
+				readWriteLock.readLock().lock();
 				if (!isStillOn) {
 					work = false;
 					break;
@@ -248,6 +252,8 @@ public class RoutingNodeComponent extends AbstractComponent {
 				// e.printStackTrace();
 				work = false;
 				break;
+			} finally {
+				readWriteLock.readLock().unlock();
 			}
 		}
 	}
@@ -281,7 +287,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 	@Override
 	public synchronized void finalise() throws Exception {
 		if (routingNodeRegistrationOutboundPort.connected())
-			routingNodeRegistrationOutboundPort.getPortURI();
+			doPortDisconnection(routingNodeRegistrationOutboundPort.getPortURI());
 		for (CommunicationOutBoundPort port : communicationConnectionPorts.values())
 
 			if (port.connected())
@@ -313,10 +319,10 @@ public class RoutingNodeComponent extends AbstractComponent {
 			doPortConnection(port.getPortURI(), communicationInboundURI,
 					CommunicationConnector.class.getCanonicalName());
 			try {
-				lock.lock();
+				readWriteLock.writeLock().lock();
 				communicationConnectionPorts.put(address, port);
 			} finally {
-				lock.unlock();
+				readWriteLock.writeLock().unlock();
 			}
 			System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A TERMINAL NODE " + address);
 		} catch (Exception e) {
@@ -355,7 +361,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 					CommunicationConnector.class.getCanonicalName());
 
 			try {
-				lock.lock();
+				readWriteLock.writeLock().lock();
 				communicationConnectionPorts.put(address, port);
 				routingOutboundPorts.put(address, routingOutboundPort);
 				System.out.println("ROUTING NODE: A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE " + address);
@@ -369,7 +375,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 			} finally {
 				// TODO: handle finally clause
-				lock.unlock();
+				readWriteLock.writeLock().unlock();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -379,7 +385,7 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 	void disconnectFromNeighbors() {
 		try {
-
+			readWriteLock.readLock().lock();
 			routingInboundPort.unpublishPort();
 			routingNodeCommunicationInboundPort.unpublishPort();
 			if (routingNodeRegistrationOutboundPort.connected()) {
@@ -404,25 +410,24 @@ public class RoutingNodeComponent extends AbstractComponent {
 					port.unpublishPort();
 				}
 			}
-			try {
-				lock.lock();
-				communicationConnectionPorts.clear();
-				routingOutboundPorts.clear();
-
-			} finally {
-				lock.unlock();
-			}
+			readWriteLock.writeLock().lock();
+			communicationConnectionPorts.clear();
+			routingOutboundPorts.clear();
 
 		} catch (Exception e) {
 			// TODO: handle exception
+		} finally {
+			readWriteLock.writeLock().unlock();
+			readWriteLock.readLock().unlock();
 		}
-		
+
 	}
 
 	void pingNeighbors() {
 		NodeAddressI currentNodeAddress = null;
 
 		try {
+			readWriteLock.readLock().lock();
 			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnectionPorts.entrySet()) {
 				currentNodeAddress = entry.getKey();
 				System.out.println("ROUTING NODE: Pinging : " + currentNodeAddress);
@@ -434,25 +439,32 @@ public class RoutingNodeComponent extends AbstractComponent {
 			// TODO: handle exception
 			if (e.getCause() instanceof ConnectException) {
 				try {
-					lock.lock();
-					doPortDisconnection(communicationConnectionPorts.get(currentNodeAddress).getPortURI());
-					communicationConnectionPorts.get(currentNodeAddress).unpublishPort();
+					readWriteLock.writeLock().lock();
+
+					System.out.println("Ping address : " + currentNodeAddress + " raised an exception");
 					RoutingOutboundPort port = routingOutboundPorts.get(currentNodeAddress);
+					CommunicationOutBoundPort toDisCommunicationOutBoundPort = communicationConnectionPorts
+							.get(currentNodeAddress);
+
+					doPortDisconnection(toDisCommunicationOutBoundPort.getPortURI());
+					toDisCommunicationOutBoundPort.unpublishPort();
+					communicationConnectionPorts.remove(currentNodeAddress);
 					if (port != null) {
 						doPortDisconnection(port.getPortURI());
+						port.unpublishPort();
 						routingOutboundPorts.remove(currentNodeAddress);
 					}
-					communicationConnectionPorts.remove(currentNodeAddress);
 
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				} finally {
-					lock.unlock();
+					readWriteLock.writeLock().unlock();
 				}
 
-				System.out.println("Ping address : " + currentNodeAddress + " raised an exception");
 			}
+		} finally {
+			readWriteLock.readLock().unlock();
 		}
 	}
 
@@ -559,11 +571,15 @@ public class RoutingNodeComponent extends AbstractComponent {
 		System.out.println("ROUTING NODE UPDATE ROUTING : A NEW ENTRY WAS RECEIVED");
 		if (!this.routes.containsKey(address))
 			this.routes.put(address, routes);
+		try {
+			readWriteLock.writeLock().lock();
+			Set<RouteInfo> currentInfos = this.routes.get(address);
 
-		Set<RouteInfo> currentInfos = this.routes.get(address);
-
-		currentInfos.addAll(routes);
-		this.routes.put(address, currentInfos);
+			currentInfos.addAll(routes);
+			this.routes.put(address, currentInfos);
+		} finally {
+			readWriteLock.writeLock().unlock();
+		}
 
 	}
 
@@ -580,7 +596,13 @@ public class RoutingNodeComponent extends AbstractComponent {
 
 		if (accessPointsMap.get(address) > numberOfHops)
 
-			accessPointsMap.put(address, numberOfHops);
+			try {
+				readWriteLock.writeLock().lock();
+				accessPointsMap.put(address, numberOfHops);
+			} finally {
+				readWriteLock.writeLock().unlock();
+			}
+
 	}
 
 	void unregister() {

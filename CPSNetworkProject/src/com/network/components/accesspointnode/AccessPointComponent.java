@@ -6,15 +6,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.Map.Entry;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
-import com.network.common.Message;
-import com.network.common.NodeAddress;
-import com.network.common.Position;
 import com.network.common.RegistrationOutboundPort;
 import com.network.common.RouteInfo;
 import com.network.connectors.RoutingConnector;
@@ -77,7 +74,7 @@ public class AccessPointComponent extends AbstractComponent {
 	public static final String ACCESS_POINT_MESSAGING_EXECUTOR_SERVICE_URI = "ACCESS_POINT_MESSAGING_EXECUTOR_SERVICE_URI";
 
 	private boolean isStillOn;
-	private Lock lock;
+	private ReentrantLock lock = new ReentrantLock();
 
 	/**
 	 * create and initialize access points
@@ -148,10 +145,10 @@ public class AccessPointComponent extends AbstractComponent {
 
 		// dynamically propagate the routing table to it's neighbors
 
-//		getExecutorService(executorServiceIndexRoutage).execute(() -> {
-//			propagateRoutingTable();
+		getExecutorService(executorServiceIndexRoutage).execute(() -> {
+			propagateRoutingTable();
 
-//		});
+		});
 
 		getExecutorService(executorServiceIndexCommunication).execute(() -> {
 
@@ -242,13 +239,28 @@ public class AccessPointComponent extends AbstractComponent {
 
 			}
 		} catch (Exception e) {
-			if (e instanceof ExecutionException) {
-				lock.lock();
-				communicationConnectionPorts.remove(currentNodeAddress);
-				System.out.println("Ping address : " + currentNodeAddress + " raised an exception");
-				communicationConnectionPorts.remove(currentNodeAddress);
-				routingOutboundPorts.remove(currentNodeAddress);
-				lock.unlock();
+			if (e.getCause() instanceof ConnectException) {
+				try {
+					lock.lock();
+					System.out.println("Ping address : " + currentNodeAddress + " raised an exception");
+					RoutingOutboundPort toDisconnectRoutingOutboundPort = routingOutboundPorts.get(currentNodeAddress);
+					CommunicationOutBoundPort toDisCommunicationOutBoundPort = communicationConnectionPorts
+							.get(currentNodeAddress);
+					if (toDisconnectRoutingOutboundPort != null) {
+						doPortDisconnection(toDisconnectRoutingOutboundPort.getPortURI());
+						toDisconnectRoutingOutboundPort.unpublishPort();
+						routingOutboundPorts.remove(currentNodeAddress);
+					}
+
+					doPortDisconnection(toDisCommunicationOutBoundPort.getPortURI());
+					toDisCommunicationOutBoundPort.unpublishPort();
+					communicationConnectionPorts.remove(currentNodeAddress);
+
+				} catch (Exception e2) {
+					// TODO: handle exception
+				} finally {
+					lock.unlock();
+				}
 			}
 		}
 	}
@@ -263,10 +275,15 @@ public class AccessPointComponent extends AbstractComponent {
 	}
 
 	void disconnectFromNeighbors() {
-//		getExecutorService(executorServiceIndexCommunication).shutdownNow();
-//		getExecutorService(executorServiceIndexRoutage).shutdownNow();
-//		getExecutorService(executorServiceIndexMessaging).shutdownNow();
+
 		try {
+
+			accessPointCommunicationInboundPort.unpublishPort();
+			accessPointRoutingInboundPort.unpublishPort();
+			if (registrationOutboundPort.connected()) {
+				doPortDisconnection(registrationOutboundPort.getPortURI());
+				registrationOutboundPort.unpublishPort();
+			}
 			for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
 				if (port.connected()) {
 					doPortDisconnection(port.getPortURI());
@@ -281,9 +298,10 @@ public class AccessPointComponent extends AbstractComponent {
 			communicationConnectionPorts.clear();
 			routes.clear();
 			routingOutboundPorts.clear();
-			lock.unlock();
 		} catch (Exception e) {
 			// TODO: handle exception
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -291,13 +309,18 @@ public class AccessPointComponent extends AbstractComponent {
 	public synchronized void shutdown() throws ComponentShutdownException {
 		try {
 
-			this.accessPointCommunicationInboundPort.unpublishPort();
-			this.accessPointRoutingInboundPort.unpublishPort();
-			this.registrationOutboundPort.unpublishPort();
+			if (accessPointCommunicationInboundPort.isPublished())
+				accessPointCommunicationInboundPort.unpublishPort();
+			if (accessPointRoutingInboundPort.isPublished())
+				accessPointRoutingInboundPort.unpublishPort();
+			if (registrationOutboundPort.isPublished())
+				registrationOutboundPort.unpublishPort();
 			for (CommunicationOutBoundPort port : communicationConnectionPorts.values())
-				port.unpublishPort();
+				if (port.isPublished())
+					port.unpublishPort();
 			for (RoutingOutboundPort routing : routingOutboundPorts.values())
-				routing.unpublishPort();
+				if (routing.isPublished())
+					routing.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -306,7 +329,8 @@ public class AccessPointComponent extends AbstractComponent {
 
 	@Override
 	public synchronized void finalise() throws Exception {
-		doPortDisconnection(registrationOutboundPort.getPortURI());
+		if (registrationOutboundPort.connected())
+			doPortDisconnection(registrationOutboundPort.getPortURI());
 		for (CommunicationOutBoundPort port : communicationConnectionPorts.values())
 			if (port.connected()) {
 				doPortDisconnection(port.getPortURI());
@@ -396,7 +420,8 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param m the message
 	 */
 	public void transmitMessage(MessageI m) {
-		if(!isStillOn) return;
+		if (!isStillOn)
+			return;
 		int N = 3;
 		try {
 			// Check if it has a route to message's address and send it via that port
@@ -448,7 +473,8 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @return 1 if a neighbors is the address, -1 else
 	 */
 	int hasRouteFor(AddressI address) {
-		if(!isStillOn) return -1;
+		if (!isStillOn)
+			return -1;
 		System.out.println("ACCESS POINT HAS " + address);
 		if (communicationConnectionPorts.containsKey(address))
 			return 1;
