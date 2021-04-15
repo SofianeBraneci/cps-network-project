@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.network.common.CommunicationOutBoundPort;
 import com.network.common.ConnectionInfo;
@@ -62,6 +63,9 @@ public class TerminalNodeComponent extends AbstractComponent {
 	private final Utility utilityObject = new Utility();
 	private boolean isStillOn;
 
+	// this will be used to insure thread safe access to the concurrent hash maps
+	ReentrantLock lock = new ReentrantLock();
+
 	/**
 	 * create and initialize terminal node
 	 * 
@@ -116,7 +120,12 @@ public class TerminalNodeComponent extends AbstractComponent {
 			doPortConnection(port.getPortURI(), communicationInboundURI,
 					CommunicationConnector.class.getCanonicalName());
 
-			communicationConnections.put(address, port);
+			try {
+				lock.lock();
+				communicationConnections.put(address, port);
+			} finally {
+				lock.unlock();
+			}
 			System.out.println("TERMINAL NODE A NEW CONNECTION WAS ESTABLISHED : " + address);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -237,8 +246,16 @@ public class TerminalNodeComponent extends AbstractComponent {
 
 		for (ConnectionInfo connectionInfo : connectionInfos) {
 			// this will invoke the connect method of the other component!!!
-			utilityObject.connectWithNeighbor(this, address, terminalNodeCommunicationInboundPort.getPortURI(),
-					communicationConnections, connectionInfo.getAddress(), connectionInfo.getCommunicationInboudPort());
+			try {
+				lock.lock();
+				utilityObject.connectWithNeighbor(this, address, terminalNodeCommunicationInboundPort.getPortURI(),
+						communicationConnections, connectionInfo.getAddress(),
+						connectionInfo.getCommunicationInboudPort());
+
+			} finally {
+				lock.unlock();
+			}
+
 		}
 		// simulate a random disconnection
 		getExecutorService(executorServiceIndexCommunication).execute(() -> {
@@ -266,7 +283,8 @@ public class TerminalNodeComponent extends AbstractComponent {
 			boolean work = true;
 			while (work) {
 				pingNeighboors();
-				if(!isStillOn) work = false;
+				if (!isStillOn)
+					work = false;
 				try {
 					Thread.sleep(500L);
 				} catch (InterruptedException e) {
@@ -291,13 +309,19 @@ public class TerminalNodeComponent extends AbstractComponent {
 	private void disconnectFromNeighbors() throws Exception {
 //		getExecutorService(executorServiceIndexCommunication).shutdownNow();
 //		getExecutorService(executorServiceIndexMessage).shutdownNow();
-		
-		for(CommunicationOutBoundPort port: communicationConnections.values()) {
+
+		for (CommunicationOutBoundPort port : communicationConnections.values()) {
 			doPortDisconnection(port.getPortURI());
 			port.unpublishPort();
 		}
-		communicationConnections.clear();
-		
+		try {
+
+			lock.lock();
+			communicationConnections.clear();
+
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	private void pingNeighboors() {
@@ -321,8 +345,13 @@ public class TerminalNodeComponent extends AbstractComponent {
 					} catch (Exception e2) {
 						// TODO: handle exception
 					}
+					try {
+						lock.lock();
+						communicationConnections.remove(currentNodeAddressI);
 
-					communicationConnections.remove(currentNodeAddressI);
+					} finally {
+						lock.unlock();
+					}
 					System.out.println("Ping address : " + address + " raised an exception");
 
 				}
@@ -333,8 +362,9 @@ public class TerminalNodeComponent extends AbstractComponent {
 	@Override
 	public synchronized void finalise() throws Exception {
 		doPortDisconnection(terminalNodeRegistrationOutboundPort.getPortURI());
-		for(CommunicationOutBoundPort port: communicationConnections.values()) {
-			if(port.connected()) doPortDisconnection(port.getPortURI());
+		for (CommunicationOutBoundPort port : communicationConnections.values()) {
+			if (port.connected())
+				doPortDisconnection(port.getPortURI());
 		}
 		super.finalise();
 	}
