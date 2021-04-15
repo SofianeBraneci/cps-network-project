@@ -1,13 +1,13 @@
 package com.network.components.accesspointnode;
 
 import java.rmi.ConnectException;
-import java.security.DrbgParameters.NextBytes;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.Lock;
 import java.util.Map.Entry;
 
 import com.network.common.CommunicationOutBoundPort;
@@ -77,6 +77,7 @@ public class AccessPointComponent extends AbstractComponent {
 	public static final String ACCESS_POINT_MESSAGING_EXECUTOR_SERVICE_URI = "ACCESS_POINT_MESSAGING_EXECUTOR_SERVICE_URI";
 
 	private boolean isStillOn;
+	private Lock lock;
 
 	/**
 	 * create and initialize access points
@@ -241,12 +242,13 @@ public class AccessPointComponent extends AbstractComponent {
 
 			}
 		} catch (Exception e) {
-			// TODO: handle exception
 			if (e instanceof ExecutionException) {
+				lock.lock();
 				communicationConnectionPorts.remove(currentNodeAddress);
 				System.out.println("Ping address : " + currentNodeAddress + " raised an exception");
 				communicationConnectionPorts.remove(currentNodeAddress);
 				routingOutboundPorts.remove(currentNodeAddress);
+				lock.unlock();
 			}
 		}
 	}
@@ -275,9 +277,11 @@ public class AccessPointComponent extends AbstractComponent {
 					doPortDisconnection(port.getPortURI());
 				}
 			}
+			lock.lock();
 			communicationConnectionPorts.clear();
 			routes.clear();
 			routingOutboundPorts.clear();
+			lock.unlock();
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -369,8 +373,10 @@ public class AccessPointComponent extends AbstractComponent {
 
 			doPortConnection(port.getPortURI(), communicationInboundPortURI,
 					CommunicationConnector.class.getCanonicalName());
+			lock.lock();
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
+			lock.unlock();
 			System.out.println("ACCESS POINT : A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE : " + address);
 			Set<RouteInfo> routeInfos = new HashSet<>();
 			RouteInfo info = new RouteInfo(address, 1);
@@ -460,7 +466,7 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param address address of the routing node to add
 	 * @param routes  routes info
 	 */
-	public synchronized void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
+	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
 		if (this.address.equals(address))
 			return;
 		if (!this.routes.containsKey(address))
@@ -479,7 +485,7 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param address      address of the routing node to add
 	 * @param numberOfHops the new number of hops
 	 */
-	public synchronized void updateAccessPoint(NodeAddressI address, int numberOfHops) {
+	public void updateAccessPoint(NodeAddressI address, int numberOfHops) {
 		System.out.println("ACCESS POINT UPDATE ACCESS POINTS: A NEW ENTRY WAS RECEIVED");
 		if (this.address.equals(address))
 			return;
