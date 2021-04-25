@@ -42,17 +42,21 @@ public class RoutingNodeRoutingInboundPort extends AbstractInboundPort implement
 
 	@Override
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) throws Exception {
-		getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI, c -> {
+		getOwner().runTask(RoutingNodeComponent.ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI, c -> {
 			((RoutingNodeComponent) c).updateRouting(address, routes);
-			return null;
+			
 		});
+//		getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI, c -> {
+//			((RoutingNodeComponent) c).updateRouting(address, routes);
+//			return null;
+//		});
 	}
 
 	@Override
 	public void updateAccessPoint(NodeAddressI neighbour, int numberOfHops) throws Exception {
-		getOwner().handleRequest(RoutingNodeComponent.ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI, c -> {
+		getOwner().runTask(RoutingNodeComponent.ROUTING_NODE_ROUTING_EXECUTOR_SERVICE_URI, c -> {
 			((RoutingNodeComponent) c).updateAccessPoint(neighbour, numberOfHops);
-			return null;
+//			return null;
 		});
 	}
 }

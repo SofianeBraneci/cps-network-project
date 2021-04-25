@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.Map.Entry;
 
@@ -171,16 +170,7 @@ public class AccessPointComponent extends AbstractComponent {
 		});
 
 		getExecutorService(executorServiceIndexCommunication).execute(() -> {
-			boolean work = true;
-			while (work) {
-				pingNeighbors();
-				try {
-					Thread.sleep(500L);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					work = false;
-				}
-			}
+			pingNeighbors();
 		});
 
 		// uncomment this to test unregister
@@ -230,37 +220,49 @@ public class AccessPointComponent extends AbstractComponent {
 
 	void pingNeighbors() {
 		NodeAddressI currentNodeAddress = null;
+		boolean work = true;
+
 		try {
-			for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnectionPorts.entrySet()) {
-				currentNodeAddress = entry.getKey();
-				System.out.println("ACCESS POINT NODE: Pinging : " + currentNodeAddress);
-
-				entry.getValue().ping();
-
+			if (!isStillOn) {
+				work = false;
+				return;
 			}
+
+			while (work) {
+				for (Entry<NodeAddressI, CommunicationOutBoundPort> entry : communicationConnectionPorts.entrySet()) {
+					currentNodeAddress = entry.getKey();
+					System.out.println("ACCESS POINT NODE: Pinging : " + currentNodeAddress);
+
+					entry.getValue().ping();
+
+				}
+			}
+			Thread.sleep(1500L);
 		} catch (Exception e) {
+			// TODO: handle exception
 			if (e.getCause() instanceof ConnectException) {
 				try {
 					lock.lock();
 					System.out.println("Ping address : " + currentNodeAddress + " raised an exception");
-					RoutingOutboundPort toDisconnectRoutingOutboundPort = routingOutboundPorts.get(currentNodeAddress);
+					RoutingOutboundPort toDisconnectRoutingOutboundPort = routingOutboundPorts
+							.remove(currentNodeAddress);
 					CommunicationOutBoundPort toDisCommunicationOutBoundPort = communicationConnectionPorts
-							.get(currentNodeAddress);
+							.remove(currentNodeAddress);
 					if (toDisconnectRoutingOutboundPort != null) {
 						doPortDisconnection(toDisconnectRoutingOutboundPort.getPortURI());
 						toDisconnectRoutingOutboundPort.unpublishPort();
-						routingOutboundPorts.remove(currentNodeAddress);
 					}
 
 					doPortDisconnection(toDisCommunicationOutBoundPort.getPortURI());
 					toDisCommunicationOutBoundPort.unpublishPort();
-					communicationConnectionPorts.remove(currentNodeAddress);
 
 				} catch (Exception e2) {
 					// TODO: handle exception
 				} finally {
 					lock.unlock();
 				}
+			} else {
+				work = false;
 			}
 		}
 	}
@@ -275,6 +277,13 @@ public class AccessPointComponent extends AbstractComponent {
 	}
 
 	void disconnectFromNeighbors() {
+		try {
+			getExecutorService(executorServiceIndexCommunication).shutdownNow();
+			getExecutorService(executorServiceIndexMessaging).shutdown();
+			getExecutorService(executorServiceIndexRoutage).shutdown();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 
 		try {
 
@@ -287,11 +296,13 @@ public class AccessPointComponent extends AbstractComponent {
 			for (CommunicationOutBoundPort port : communicationConnectionPorts.values()) {
 				if (port.connected()) {
 					doPortDisconnection(port.getPortURI());
+					port.unpublishPort();
 				}
 			}
 			for (RoutingOutboundPort port : routingOutboundPorts.values()) {
 				if (port.connected()) {
 					doPortDisconnection(port.getPortURI());
+					port.unpublishPort();
 				}
 			}
 			lock.lock();
@@ -397,10 +408,9 @@ public class AccessPointComponent extends AbstractComponent {
 
 			doPortConnection(port.getPortURI(), communicationInboundPortURI,
 					CommunicationConnector.class.getCanonicalName());
-			lock.lock();
 			communicationConnectionPorts.put(address, port);
 			routingOutboundPorts.put(address, routingOutboundPort);
-			lock.unlock();
+
 			System.out.println("ACCESS POINT : A NEW CONNECTION WAS ESTABLISHED WITH A ROUTING NODE : " + address);
 			Set<RouteInfo> routeInfos = new HashSet<>();
 			RouteInfo info = new RouteInfo(address, 1);
@@ -493,14 +503,20 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param routes  routes info
 	 */
 	public void updateRouting(NodeAddressI address, Set<RouteInfo> routes) {
+		if(!isStillOn) return;
 		if (this.address.equals(address))
 			return;
-		if (!this.routes.containsKey(address))
+		if (!this.routes.containsKey(address)) {
 			this.routes.put(address, routes);
+			System.out.println("ACCESS POINT UPDATE ROUTING: A NEW ENTRY WAS RECEIVED");
+
+			return;
+		}
+
 		Set<RouteInfo> currentInfos = this.routes.get(address);
 		currentInfos.addAll(routes);
 
-		System.out.println("ACCESS POINT UPDATE ROUTING: A NEW ENTRY WAS RECEIVED");
+		System.out.println("ACCESS POINT UPDATE ROUTING: AN UPDATE WAS RECEIVED");
 
 		this.routes.put(address, currentInfos);
 	}
@@ -512,12 +528,20 @@ public class AccessPointComponent extends AbstractComponent {
 	 * @param numberOfHops the new number of hops
 	 */
 	public void updateAccessPoint(NodeAddressI address, int numberOfHops) {
-		System.out.println("ACCESS POINT UPDATE ACCESS POINTS: A NEW ENTRY WAS RECEIVED");
-		if (this.address.equals(address))
+		if(!isStillOn) return;
+				if (this.address.equals(address))
 			return;
-		if (!accessPointsMap.containsKey(address))
+		if (!accessPointsMap.containsKey(address)) {
+			System.out.println("ACCESS POINT UPDATE ACCESS POINTS: A NEW ENTRY WAS RECEIVED");
+
 			accessPointsMap.put(address, numberOfHops);
+			return;
+
+		}
+
 		if (accessPointsMap.get(address) > numberOfHops)
+			System.out.println("ACCESS POINT UPDATE ACCESS POINTS: AN UPDATE WAS RECEIVED");
+
 			accessPointsMap.put(address, numberOfHops);
 	}
 

@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.network.common.ConnectionInfo;
 import com.network.common.NodeComponentInformationWrapper;
@@ -29,9 +30,9 @@ public class RegisterComponent extends AbstractComponent {
 	/** register port */
 	protected RegisterServiceInboundPort registerPort;
 	/** the unique register inbound port uri */
-	public static  String REGISTER_INBOUND_PORT_URI;
+	public static String REGISTER_INBOUND_PORT_URI;
 	public static final String REGISTETR_EXECUTOR_SERVICE_URI = "REGISTETR_EXCUTOR_SERVICE_URI";
-
+	public static final String UNREGISTETR_EXECUTOR_SERVICE_URI = "UNREGISTETR_EXCUTOR_SERVICE_URI";
 	/** all terminal nodes */
 	private Map<NodeAddressI, NodeComponentInformationWrapper> terminalNodesTable;
 	/** all routing nodes */
@@ -40,6 +41,7 @@ public class RegisterComponent extends AbstractComponent {
 	private Map<NodeAddressI, NodeComponentInformationWrapper> accessPointsNodesTable;
 	// for handling registration of multiple nodes
 	private int exectutorIndex;
+	private ReentrantLock lock = new ReentrantLock();
 
 	/**
 	 * Create and initialize register
@@ -54,6 +56,7 @@ public class RegisterComponent extends AbstractComponent {
 			routingNodesTable = new ConcurrentHashMap<>();
 			accessPointsNodesTable = new ConcurrentHashMap<>();
 			exectutorIndex = createNewExecutorService(REGISTETR_EXECUTOR_SERVICE_URI, 10, false);
+			createNewExecutorService(UNREGISTETR_EXECUTOR_SERVICE_URI, 10, false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -159,10 +162,15 @@ public class RegisterComponent extends AbstractComponent {
 		Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 1);
 
 		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 2));
+		try {
+			lock.lock();
+			terminalNodesTable.put(address,
+					new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
+			System.out.println("current terminal nodes table size : " + terminalNodesTable.size());
+		} finally {
+			lock.unlock();
+		}
 
-		terminalNodesTable.put(address,
-				new NodeComponentInformationWrapper(communicationInboundPortURI, initialPosition));
-		System.out.println("current terminal nodes table size : " + terminalNodesTable.size());
 		return neighbores;
 
 	}
@@ -209,17 +217,23 @@ public class RegisterComponent extends AbstractComponent {
 //			return new HashSet<>();
 //		}
 //		
-		Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition,
-				Double.POSITIVE_INFINITY, 2);
-		
+		Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, Double.POSITIVE_INFINITY, 2);
+
 		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
-		
+
 		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
-		
-		accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(
-				communicationInboundPortURI, initialPosition, routingInboundPortURI));
-		
-		System.out.println("current access points table size : " + accessPointsNodesTable.size());
+
+		try {
+			lock.lock();
+			accessPointsNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
+					initialPosition, routingInboundPortURI));
+
+			System.out.println("current access points table size : " + accessPointsNodesTable.size());
+
+		} finally {
+			// TODO: handle finally clause
+			lock.unlock();
+		}
 		return neighbores;
 
 	}
@@ -268,17 +282,23 @@ public class RegisterComponent extends AbstractComponent {
 //		}
 //		
 		System.out.println("REGISTERING A NEW ROUTING NODE IP: " + address);
-		
+
 		Set<ConnectionInfo> neighbores = getNeighbors(address, initialPosition, initialRange, 2);
-		
+
 		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 1));
-		
+
 		neighbores.addAll(getNeighbors(address, initialPosition, initialRange, 0));
-		
-		routingNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
-				initialPosition, routingInboundPortURI));
-		
-		System.out.println("current routing nodes table size : " + routingNodesTable.size());
+		try {
+			lock.lock();
+
+			routingNodesTable.put(address, new NodeComponentInformationWrapper(communicationInboundPortURI,
+					initialPosition, routingInboundPortURI));
+
+			System.out.println("current routing nodes table size : " + routingNodesTable.size());
+
+		} finally {
+			lock.unlock();
+		}
 		return neighbores;
 	}
 
@@ -288,9 +308,16 @@ public class RegisterComponent extends AbstractComponent {
 	 * @param address address of the node to unregister
 	 */
 	void unregister(NodeAddressI address) {
-		terminalNodesTable.remove(address);
-		routingNodesTable.remove(address);
-		accessPointsNodesTable.remove(address);
-		System.out.println("A node with ip :  " + address + " was unregistered");
+		try {
+			lock.lock();
+			terminalNodesTable.remove(address);
+			routingNodesTable.remove(address);
+			accessPointsNodesTable.remove(address);
+			System.out.println("A node with ip :  " + address + " was unregistered");
+
+		} finally {
+			// TODO: handle finally clause
+			lock.unlock();
+		}
 	}
 }

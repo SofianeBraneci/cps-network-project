@@ -72,9 +72,9 @@ public class RegisterServiceInboundPort extends AbstractInboundPort implements R
 
 	@Override
 	public void unregister(NodeAddressI address) throws Exception {
-		getOwner().handleRequest(c -> {
+		getOwner().runTask(RegisterComponent.UNREGISTETR_EXECUTOR_SERVICE_URI, c -> {
 			((RegisterComponent) c).unregister(address);
-			return null;
+
 		});
 	}
 }
