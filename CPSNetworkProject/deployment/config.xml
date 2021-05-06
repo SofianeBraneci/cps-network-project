@@ -1,0 +1,19 @@
+<deployment>
+	<hosts>
+	<host name="localhost"
+			dir="/Users/walidsadat/git/cps-network-project/CPSNetworkProject/deployment/"/>
+	</hosts>
+	<cyclicBarrier hostname="localhost" port="55253"/>
+	<globalRegistry hostname="localhost" port="55252"/>
+	<rmiRegistryPort no="55999"/>
+	<jvms2hostnames>
+		<jvm2hostname jvmuri="accesspoint" rmiRegistryCreator="true" hostname="localhost"
+						mainclass="com.network.tests.DistributedCVM"/>
+		<jvm2hostname jvmuri="terminal" rmiRegistryCreator="false" hostname="localhost"
+						mainclass="com.network.tests.DistributedCVM"/>
+		<jvm2hostname jvmuri="routing" rmiRegistryCreator="false" hostname="localhost"
+						mainclass="com.network.tests.DistributedCVM"/>
+		<jvm2hostname jvmuri="register" rmiRegistryCreator="false" hostname="localhost"
+						mainclass="com.network.tests.DistributedCVM"/>
+	</jvms2hostnames>	
+</deployment>
